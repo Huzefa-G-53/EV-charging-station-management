@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h4>Management Reports</h4>
+  <span class="text-muted small">Financial and operational summary</span>
+</div>
+
+<!-- ── Financial Summary ────────────────────────────────────────────────── -->
+<div class="stats-bar mb-4">
+  <div class="stat-cell">
+    <div class="stat-val text-success">₹{{ "%.2f"|format(total_revenue) }}</div>
+    <div class="stat-lbl">Total Revenue</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-val text-danger">₹{{ "%.2f"|format(total_expenses) }}</div>
+    <div class="stat-lbl">Total Expenses</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-val {% if net_profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+      ₹{{ "%.2f"|format(net_profit) }}
+    </div>
+    <div class="stat-lbl">Net Profit / Loss</div>
+  </div>
+</div>
+
+<!-- ── Charts ───────────────────────────────────────────────────────────── -->
+<div class="row g-3 mb-4">
+  <div class="col-lg-6">
+    <div class="chart-box">
+      <h6 class="chart-title">Revenue by Source</h6>
+      <canvas id="revenueChart" height="200"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="chart-box">
+      <h6 class="chart-title">Expenses by Type</h6>
+      <canvas id="expenseChart" height="200"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ── Revenue by Source Table ─────────────────────────────────────────── -->
+<div class="row g-3 mb-4">
+  <div class="col-lg-6">
+    <h6 class="section-heading">Revenue by Source</h6>
+    <table class="table table-bordered table-sm">
+      <thead><tr><th>Source</th><th class="text-end">Total (₹)</th></tr></thead>
+      <tbody>
+        {% for r in revenue_by_source %}
+        <tr><td>{{ r.source }}</td><td class="text-end">{{ '%.2f'|format(r.total) }}</td></tr>
+        {% else %}
+        <tr><td colspan="2" class="text-muted text-center">No data</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="col-lg-6">
+    <h6 class="section-heading">Expenses by Type</h6>
+    <table class="table table-bordered table-sm">
+      <thead><tr><th>Type</th><th class="text-end">Total (₹)</th></tr></thead>
+      <tbody>
+        {% for e in expenses_by_type %}
+        <tr><td>{{ e.expense_type }}</td><td class="text-end">{{ '%.2f'|format(e.total) }}</td></tr>
+        {% else %}
+        <tr><td colspan="2" class="text-muted text-center">No data</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Station-wise P&L ─────────────────────────────────────────────────── -->
+<h6 class="section-heading">Station-wise Revenue vs Expenses</h6>
+<div class="table-responsive mb-4">
+  <table class="table table-bordered table-sm">
+    <thead>
+      <tr>
+        <th>Station</th>
+        <th class="text-end">Revenue (₹)</th>
+        <th class="text-end">Expenses (₹)</th>
+        <th class="text-end">Net (₹)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in station_revenue %}
+        {% set loop_idx = loop.index0 %}
+        {% set exp = station_expenses[loop_idx] if loop_idx < station_expenses|length else {'total': 0} %}
+        {% set net = (r.total|float) - (exp.total|float) %}
+      <tr>
+        <td>{{ r.station_name }}</td>
+        <td class="text-end text-success">{{ '%.2f'|format(r.total) }}</td>
+        <td class="text-end text-danger">{{ '%.2f'|format(exp.total) }}</td>
+        <td class="text-end {% if net >= 0 %}text-success{% else %}text-danger{% endif %} fw-semibold">
+          {{ '%.2f'|format(net) }}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4" class="text-muted text-center">No data</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ── Active Sessions & Chargers ──────────────────────────────────────── -->
+<div class="row g-3 mb-4">
+  <div class="col-lg-6">
+    <h6 class="section-heading">Currently Active Sessions ({{ active_sessions|length }})</h6>
+    <table class="table table-bordered table-sm">
+      <thead><tr><th>#</th><th>User</th><th>Vehicle</th><th>Station</th><th>Since</th></tr></thead>
+      <tbody>
+        {% for s in active_sessions %}
+        <tr>
+          <td>{{ s.session_id }}</td>
+          <td>{{ s.full_name }}</td>
+          <td>{{ s.vehicle_number }}</td>
+          <td>{{ s.station_name }}</td>
+          <td>{{ s.start_time.strftime('%d %b %H:%M') if s.start_time else '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-muted text-center">No active sessions</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="col-lg-6">
+    <h6 class="section-heading">Maintenance Summary</h6>
+    <table class="table table-bordered table-sm">
+      <thead><tr><th>Status</th><th class="text-center">Count</th><th class="text-end">Total Cost (₹)</th></tr></thead>
+      <tbody>
+        {% for m in maintenance_summary %}
+        <tr>
+          <td>{{ m.status }}</td>
+          <td class="text-center">{{ m.cnt }}</td>
+          <td class="text-end">{{ '%.2f'|format(m.total_cost) }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3" class="text-muted text-center">No data</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  const COLORS = ['#1c2e4a','#2e6da4','#4a90c4','#7ab3d9','#aed0e8','#c8dff0'];
+
+  new Chart(document.getElementById('revenueChart'), {
+    type: 'bar',
+    data: {
+      labels: [{% for r in revenue_by_source %}'{{ r.source }}'{% if not loop.last %},{% endif %}{% endfor %}],
+      datasets: [{ label: '₹', data: [{% for r in revenue_by_source %}{{ r.total }}{% if not loop.last %},{% endif %}{% endfor %}], backgroundColor: COLORS, borderRadius: 3 }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+
+  new Chart(document.getElementById('expenseChart'), {
+    type: 'bar',
+    data: {
+      labels: [{% for e in expenses_by_type %}'{{ e.expense_type }}'{% if not loop.last %},{% endif %}{% endfor %}],
+      datasets: [{ label: '₹', data: [{% for e in expenses_by_type %}{{ e.total }}{% if not loop.last %},{% endif %}{% endfor %}], backgroundColor: '#c0392b', borderRadius: 3 }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+</script>
+{% endblock %}

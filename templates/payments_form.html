@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if payment else 'Record' }} Payment{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h4>{{ 'Edit' if payment else 'Record' }} Payment</h4>
+  <a href="{{ url_for('payments.list_payments') }}" class="btn btn-outline-secondary btn-sm mt-1">← Back</a>
+</div>
+<div class="form-container">
+  <form method="post">
+    <div class="row g-3">
+      {% if not payment %}
+      <div class="col-md-6">
+        <label for="session_id" class="form-label">Session (Completed, Unpaid) <span class="text-danger">*</span></label>
+        <select class="form-select" id="session_id" name="session_id" required>
+          <option value="">— Select Session —</option>
+          {% for s in sessions %}
+          <option value="{{ s.session_id }}">
+            #{{ s.session_id }} — {{ s.full_name }} (₹{{ s.total_amount or '?' }})
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      {% else %}
+      <div class="col-md-6">
+        <label class="form-label">Session #</label>
+        <input type="text" class="form-control" value="{{ payment.session_id }}" disabled>
+      </div>
+      {% endif %}
+      <div class="col-md-6">
+        <label for="payment_date" class="form-label">Payment Date <span class="text-danger">*</span></label>
+        <input type="date" class="form-control" id="payment_date" name="payment_date"
+               value="{{ payment.payment_date if payment else '' }}" required>
+      </div>
+      <div class="col-md-4">
+        <label for="amount" class="form-label">Amount (₹) <span class="text-danger">*</span></label>
+        <input type="number" step="0.01" min="0.01" class="form-control" id="amount"
+               name="amount" value="{{ payment.amount if payment else '' }}" required>
+      </div>
+      <div class="col-md-4">
+        <label for="payment_method" class="form-label">Payment Method <span class="text-danger">*</span></label>
+        <select class="form-select" id="payment_method" name="payment_method" required>
+          {% for m in ['Cash','Card','UPI','Net Banking','Wallet'] %}
+          <option value="{{ m }}" {% if payment and payment.payment_method == m %}selected{% endif %}>{{ m }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label for="payment_status" class="form-label">Status</label>
+        <select class="form-select" id="payment_status" name="payment_status">
+          {% for s in ['Pending','Completed','Failed','Refunded'] %}
+          <option value="{{ s }}" {% if payment and payment.payment_status == s %}selected{% elif not payment and s == 'Completed' %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+      <button type="submit" class="btn btn-primary btn-sm">{{ 'Update' if payment else 'Record' }} Payment</button>
+      <a href="{{ url_for('payments.list_payments') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

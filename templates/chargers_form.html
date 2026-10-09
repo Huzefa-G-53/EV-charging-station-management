@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if charger else 'Add' }} Charger{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h4>{{ 'Edit' if charger else 'Add' }} Charger</h4>
+  <a href="{{ url_for('chargers.list_chargers') }}" class="btn btn-outline-secondary btn-sm mt-1">← Back</a>
+</div>
+<div class="form-container">
+  <form method="post">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label for="station_id" class="form-label">Station <span class="text-danger">*</span></label>
+        <select class="form-select" id="station_id" name="station_id" required>
+          <option value="">— Select Station —</option>
+          {% for st in stations %}
+          <option value="{{ st.station_id }}" {% if charger and charger.station_id == st.station_id %}selected{% endif %}>{{ st.station_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="charger_type" class="form-label">Charger Type <span class="text-danger">*</span></label>
+        <select class="form-select" id="charger_type" name="charger_type" required>
+          <option value="">— Select Type —</option>
+          {% for t in ['AC Level 1','AC Level 2','DC Fast','DC CCS','DC CHAdeMO','DC GB/T','Other'] %}
+          <option value="{{ t }}" {% if charger and charger.charger_type == t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label for="power_rating" class="form-label">Power Rating (kW) <span class="text-danger">*</span></label>
+        <input type="number" step="0.01" min="0.01" class="form-control" id="power_rating"
+               name="power_rating" value="{{ charger.power_rating if charger else '' }}" required>
+      </div>
+      <div class="col-md-4">
+        <label for="price_per_kwh" class="form-label">Price per kWh (₹) <span class="text-danger">*</span></label>
+        <input type="number" step="0.01" min="0.01" class="form-control" id="price_per_kwh"
+               name="price_per_kwh" value="{{ charger.price_per_kwh if charger else '' }}" required>
+      </div>
+      <div class="col-md-4">
+        <label for="status" class="form-label">Status</label>
+        <select class="form-select" id="status" name="status">
+          {% for s in ['Available','In Use','Under Maintenance','Inactive'] %}
+          <option value="{{ s }}" {% if charger and charger.status == s %}selected{% elif not charger and s == 'Available' %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+      <button type="submit" class="btn btn-primary btn-sm">{{ 'Update' if charger else 'Add' }} Charger</button>
+      <a href="{{ url_for('chargers.list_chargers') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

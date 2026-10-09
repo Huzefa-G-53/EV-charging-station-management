@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h4>Dashboard</h4>
+  <span class="text-muted small">Overview of all operations</span>
+</div>
+
+<!-- ── KPI Stats Bar ─────────────────────────────────────────────────────── -->
+<div class="stats-bar mb-4">
+  <div class="stat-cell">
+    <div class="stat-val">{{ total_users }}</div>
+    <div class="stat-lbl">Total Users</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-val">{{ total_vehicles }}</div>
+    <div class="stat-lbl">Vehicles</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-val">{{ total_stations }}</div>
+    <div class="stat-lbl">Stations</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-val">{{ total_chargers }}</div>
+    <div class="stat-lbl">Chargers</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-val text-warning">{{ active_sessions }}</div>
+    <div class="stat-lbl">Active Sessions</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-val text-success">₹{{ "%.0f"|format(total_revenue) }}</div>
+    <div class="stat-lbl">Total Revenue</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-val text-danger">₹{{ "%.0f"|format(total_expenses) }}</div>
+    <div class="stat-lbl">Total Expenses</div>
+  </div>
+  <div class="stat-cell {% if net_profit >= 0 %}profit-pos{% else %}profit-neg{% endif %}">
+    <div class="stat-val {% if net_profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+      ₹{{ "%.0f"|format(net_profit) }}
+    </div>
+    <div class="stat-lbl">Net Profit</div>
+  </div>
+</div>
+
+<!-- ── Charts Row ────────────────────────────────────────────────────────── -->
+<div class="row g-3 mb-4">
+  <div class="col-lg-6">
+    <div class="chart-box">
+      <h6 class="chart-title">Revenue by Source</h6>
+      <canvas id="revenueChart" height="200"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="chart-box">
+      <h6 class="chart-title">Expenses by Type</h6>
+      <canvas id="expenseChart" height="200"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="chart-box">
+      <h6 class="chart-title">Charger Status</h6>
+      <canvas id="chargerChart" height="180"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="chart-box">
+      <h6 class="chart-title">Session Status</h6>
+      <canvas id="sessionChart" height="180"></canvas>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  const COLORS = ['#1c2e4a','#2e6da4','#4a90c4','#7ab3d9','#aed0e8','#c8dff0'];
+  const STATUS_COLORS = {
+    'Available': '#27ae60', 'In Use': '#f39c12',
+    'Under Maintenance': '#e74c3c', 'Inactive': '#95a5a6',
+    'Active': '#f39c12', 'Completed': '#27ae60', 'Cancelled': '#95a5a6'
+  };
+
+  // Revenue by Source
+  new Chart(document.getElementById('revenueChart'), {
+    type: 'bar',
+    data: {
+      labels: [{% for r in revenue_by_source %}'{{ r.source }}'{% if not loop.last %},{% endif %}{% endfor %}],
+      datasets: [{
+        label: 'Amount (₹)',
+        data: [{% for r in revenue_by_source %}{{ r.total }}{% if not loop.last %},{% endif %}{% endfor %}],
+        backgroundColor: COLORS,
+        borderRadius: 3
+      }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+
+  // Expenses by Type
+  new Chart(document.getElementById('expenseChart'), {
+    type: 'bar',
+    data: {
+      labels: [{% for e in expenses_by_type %}'{{ e.expense_type }}'{% if not loop.last %},{% endif %}{% endfor %}],
+      datasets: [{
+        label: 'Amount (₹)',
+        data: [{% for e in expenses_by_type %}{{ e.total }}{% if not loop.last %},{% endif %}{% endfor %}],
+        backgroundColor: '#c0392b',
+        borderRadius: 3
+      }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+
+  // Charger Status (doughnut)
+  new Chart(document.getElementById('chargerChart'), {
+    type: 'doughnut',
+    data: {
+      labels: [{% for c in charger_status %}'{{ c.status }}'{% if not loop.last %},{% endif %}{% endfor %}],
+      datasets: [{
+        data: [{% for c in charger_status %}{{ c.cnt }}{% if not loop.last %},{% endif %}{% endfor %}],
+        backgroundColor: [{% for c in charger_status %}'{{ STATUS_COLORS[c.status] if c.status in STATUS_COLORS else "#7f8c8d" }}'{% if not loop.last %},{% endif %}{% endfor %}]
+      }]
+    },
+    options: { plugins: { legend: { position: 'right' } }, cutout: '60%' }
+  });
+
+  // Session Status (doughnut)
+  new Chart(document.getElementById('sessionChart'), {
+    type: 'doughnut',
+    data: {
+      labels: [{% for s in session_status %}'{{ s.status }}'{% if not loop.last %},{% endif %}{% endfor %}],
+      datasets: [{
+        data: [{% for s in session_status %}{{ s.cnt }}{% if not loop.last %},{% endif %}{% endfor %}],
+        backgroundColor: [{% for s in session_status %}'{{ STATUS_COLORS[s.status] if s.status in STATUS_COLORS else "#7f8c8d" }}'{% if not loop.last %},{% endif %}{% endfor %}]
+      }]
+    },
+    options: { plugins: { legend: { position: 'right' } }, cutout: '60%' }
+  });
+</script>
+{% endblock %}

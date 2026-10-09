@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if station else 'Add' }} Station{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h4>{{ 'Edit' if station else 'Add' }} Charging Station</h4>
+  <a href="{{ url_for('stations.list_stations') }}" class="btn btn-outline-secondary btn-sm mt-1">← Back</a>
+</div>
+<div class="form-container">
+  <form method="post">
+    <div class="row g-3">
+      <div class="col-md-8">
+        <label for="station_name" class="form-label">Station Name <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" id="station_name" name="station_name"
+               value="{{ station.station_name if station else '' }}" required>
+      </div>
+      <div class="col-md-4">
+        <label for="contact_number" class="form-label">Contact Number</label>
+        <input type="text" class="form-control" id="contact_number" name="contact_number"
+               value="{{ station.contact_number if station else '' }}">
+      </div>
+      <div class="col-12">
+        <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
+        <textarea class="form-control" id="address" name="address" rows="2" required>{{ station.address if station else '' }}</textarea>
+      </div>
+      <div class="col-md-4">
+        <label for="number_of_chargers" class="form-label">No. of Chargers</label>
+        <input type="number" min="0" class="form-control" id="number_of_chargers" name="number_of_chargers"
+               value="{{ station.number_of_chargers if station else 0 }}">
+      </div>
+      <div class="col-md-4">
+        <label for="operating_hours" class="form-label">Operating Hours</label>
+        <input type="text" class="form-control" id="operating_hours" name="operating_hours"
+               value="{{ station.operating_hours if station else '' }}" placeholder="e.g. 06:00 AM - 11:00 PM">
+      </div>
+      <div class="col-md-4">
+        <label for="status" class="form-label">Status</label>
+        <select class="form-select" id="status" name="status">
+          {% for s in ['Active','Inactive','Under Maintenance'] %}
+          <option value="{{ s }}" {% if station and station.status == s %}selected{% elif not station and s == 'Active' %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+      <button type="submit" class="btn btn-primary btn-sm">{{ 'Update' if station else 'Add' }} Station</button>
+      <a href="{{ url_for('stations.list_stations') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

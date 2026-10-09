@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Staff{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-end">
+  <div>
+    <h4>Staff Management</h4>
+    <span class="text-muted small">All station staff members</span>
+  </div>
+  <a href="{{ url_for('staff.add_staff') }}" class="btn btn-primary btn-sm">+ Add Staff</a>
+</div>
+
+<form method="get" class="mb-3">
+  <div class="d-flex gap-2 flex-wrap">
+    <select class="form-select form-select-sm" name="station_id" style="max-width:260px;" onchange="this.form.submit()">
+      <option value="">All Stations</option>
+      {% for st in stations %}
+      <option value="{{ st.station_id }}" {% if station_filter|string == st.station_id|string %}selected{% endif %}>{{ st.station_name }}</option>
+      {% endfor %}
+    </select>
+    {% if station_filter %}<a href="{{ url_for('staff.list_staff') }}" class="btn btn-outline-secondary btn-sm">Clear</a>{% endif %}
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-hover table-bordered align-middle">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Station</th>
+        <th>Role</th>
+        <th>Phone</th>
+        <th>Email</th>
+        <th>Joining Date</th>
+        <th>Salary (₹)</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in staff %}
+      <tr>
+        <td>{{ s.staff_id }}</td>
+        <td>{{ s.full_name }}</td>
+        <td>{{ s.station_name }}</td>
+        <td><span class="badge bg-secondary">{{ s.role }}</span></td>
+        <td>{{ s.phone or '—' }}</td>
+        <td>{{ s.email or '—' }}</td>
+        <td>{{ s.joining_date }}</td>
+        <td>₹{{ "%.2f"|format(s.salary) }}</td>
+        <td>
+          <a href="{{ url_for('staff.edit_staff', staff_id=s.staff_id) }}" class="btn btn-outline-secondary btn-sm">Edit</a>
+          <form action="{{ url_for('staff.delete_staff', staff_id=s.staff_id) }}" method="post"
+                style="display:inline;" onsubmit="return confirmDelete()">
+            <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="9" class="text-center text-muted py-3">No staff found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

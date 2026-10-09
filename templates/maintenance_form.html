@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if record else 'Add' }} Maintenance{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h4>{{ 'Edit' if record else 'Add' }} Maintenance Record</h4>
+  <a href="{{ url_for('maintenance.list_maintenance') }}" class="btn btn-outline-secondary btn-sm mt-1">← Back</a>
+</div>
+<div class="form-container">
+  <form method="post">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label for="charger_id" class="form-label">Charger <span class="text-danger">*</span></label>
+        <select class="form-select" id="charger_id" name="charger_id" required>
+          <option value="">— Select Charger —</option>
+          {% for c in chargers %}
+          <option value="{{ c.charger_id }}" {% if record and record.charger_id == c.charger_id %}selected{% endif %}>
+            #{{ c.charger_id }} — {{ c.charger_type }} @ {{ c.station_name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="staff_id" class="form-label">Technician <span class="text-danger">*</span></label>
+        <select class="form-select" id="staff_id" name="staff_id" required>
+          <option value="">— Select Staff —</option>
+          {% for s in staff %}
+          <option value="{{ s.staff_id }}" {% if record and record.staff_id == s.staff_id %}selected{% endif %}>
+            {{ s.full_name }} ({{ s.role }})
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label for="maintenance_date" class="form-label">Date <span class="text-danger">*</span></label>
+        <input type="date" class="form-control" id="maintenance_date" name="maintenance_date"
+               value="{{ record.maintenance_date if record else '' }}" required>
+      </div>
+      <div class="col-md-4">
+        <label for="maintenance_type" class="form-label">Type <span class="text-danger">*</span></label>
+        <select class="form-select" id="maintenance_type" name="maintenance_type" required>
+          {% for t in ['Preventive','Repair','Software','Hardware','Inspection','Other'] %}
+          <option value="{{ t }}" {% if record and record.maintenance_type == t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label for="cost" class="form-label">Cost (₹)</label>
+        <input type="number" step="0.01" min="0" class="form-control" id="cost"
+               name="cost" value="{{ record.cost if record else '' }}">
+      </div>
+      <div class="col-12">
+        <label for="issue_description" class="form-label">Issue Description</label>
+        <textarea class="form-control" id="issue_description" name="issue_description" rows="2">{{ record.issue_description if record else '' }}</textarea>
+      </div>
+      <div class="col-md-4">
+        <label for="status" class="form-label">Status</label>
+        <select class="form-select" id="status" name="status">
+          {% for s in ['Scheduled','In Progress','Completed','Cancelled'] %}
+          <option value="{{ s }}" {% if record and record.status == s %}selected{% elif not record and s == 'Scheduled' %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+      <button type="submit" class="btn btn-primary btn-sm">{{ 'Update' if record else 'Add' }} Record</button>
+      <a href="{{ url_for('maintenance.list_maintenance') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

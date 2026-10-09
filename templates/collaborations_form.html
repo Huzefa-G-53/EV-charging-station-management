@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if collab else 'Add' }} Collaboration{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h4>{{ 'Edit' if collab else 'Add' }} Collaboration</h4>
+  <a href="{{ url_for('collaborations.list_collaborations') }}" class="btn btn-outline-secondary btn-sm mt-1">← Back</a>
+</div>
+<div class="form-container">
+  <form method="post">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label for="station_id" class="form-label">Station <span class="text-danger">*</span></label>
+        <select class="form-select" id="station_id" name="station_id" required>
+          <option value="">— Select Station —</option>
+          {% for st in stations %}
+          <option value="{{ st.station_id }}" {% if collab and collab.station_id == st.station_id %}selected{% endif %}>{{ st.station_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="partner_name" class="form-label">Partner Name <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" id="partner_name" name="partner_name"
+               value="{{ collab.partner_name if collab else '' }}" required>
+      </div>
+      <div class="col-md-4">
+        <label for="collaboration_type" class="form-label">Type <span class="text-danger">*</span></label>
+        <select class="form-select" id="collaboration_type" name="collaboration_type" required>
+          <option value="">— Select Type —</option>
+          {% for t in collab_types %}
+          <option value="{{ t }}" {% if collab and collab.collaboration_type == t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label for="contact_person" class="form-label">Contact Person</label>
+        <input type="text" class="form-control" id="contact_person" name="contact_person"
+               value="{{ collab.contact_person if collab else '' }}">
+      </div>
+      <div class="col-md-4">
+        <label for="contact_number" class="form-label">Contact Number</label>
+        <input type="tel" class="form-control" id="contact_number" name="contact_number"
+               value="{{ collab.contact_number if collab else '' }}">
+      </div>
+      <div class="col-md-3">
+        <label for="start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
+        <input type="date" class="form-control" id="start_date" name="start_date"
+               value="{{ collab.start_date if collab else '' }}" required>
+      </div>
+      <div class="col-md-3">
+        <label for="end_date" class="form-label">End Date</label>
+        <input type="date" class="form-control" id="end_date" name="end_date"
+               value="{{ collab.end_date if collab else '' }}">
+      </div>
+      <div class="col-md-3">
+        <label for="agreed_amount" class="form-label">Agreed Amount (₹/mo)</label>
+        <input type="number" step="0.01" min="0" class="form-control" id="agreed_amount"
+               name="agreed_amount" value="{{ collab.agreed_amount if collab else '' }}">
+      </div>
+      <div class="col-md-3">
+        <label for="status" class="form-label">Status</label>
+        <select class="form-select" id="status" name="status">
+          {% for s in collab_statuses %}
+          <option value="{{ s }}" {% if collab and collab.status == s %}selected{% elif not collab and s == 'Active' %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12">
+        <label for="description" class="form-label">Description / Notes</label>
+        <textarea class="form-control" id="description" name="description" rows="2">{{ collab.description if collab else '' }}</textarea>
+      </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+      <button type="submit" class="btn btn-primary btn-sm">{{ 'Update' if collab else 'Add' }} Collaboration</button>
+      <a href="{{ url_for('collaborations.list_collaborations') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

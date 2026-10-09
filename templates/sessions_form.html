@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if session else 'New' }} Session{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h4>{{ 'Edit' if session else 'New' }} Charging Session</h4>
+  <a href="{{ url_for('sessions.list_sessions') }}" class="btn btn-outline-secondary btn-sm mt-1">← Back</a>
+</div>
+<div class="form-container">
+  <form method="post">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label for="user_id" class="form-label">User <span class="text-danger">*</span></label>
+        <select class="form-select" id="user_id" name="user_id" required>
+          <option value="">— Select User —</option>
+          {% for u in users %}
+          <option value="{{ u.user_id }}" {% if session and session.user_id == u.user_id %}selected{% endif %}>{{ u.full_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label for="vehicle_id" class="form-label">Vehicle <span class="text-danger">*</span></label>
+        <select class="form-select" id="vehicle_id" name="vehicle_id" required>
+          <option value="">— Select Vehicle —</option>
+          {% for v in vehicles %}
+          <option value="{{ v.vehicle_id }}" {% if session and session.vehicle_id == v.vehicle_id %}selected{% endif %}>{{ v.vehicle_number }} — {{ v.brand }} {{ v.model }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label for="charger_id" class="form-label">Charger <span class="text-danger">*</span></label>
+        <select class="form-select" id="charger_id" name="charger_id" required>
+          <option value="">— Select Charger —</option>
+          {% for c in chargers %}
+          <option value="{{ c.charger_id }}" {% if session and session.charger_id == c.charger_id %}selected{% endif %}>
+            #{{ c.charger_id }} — {{ c.charger_type }} @ {{ c.station_name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="start_time" class="form-label">Start Time <span class="text-danger">*</span></label>
+        <input type="datetime-local" class="form-control" id="start_time" name="start_time"
+               value="{{ session.start_time.strftime('%Y-%m-%dT%H:%M') if session and session.start_time else '' }}" required>
+      </div>
+      <div class="col-md-6">
+        <label for="end_time" class="form-label">End Time</label>
+        <input type="datetime-local" class="form-control" id="end_time" name="end_time"
+               value="{{ session.end_time.strftime('%Y-%m-%dT%H:%M') if session and session.end_time else '' }}">
+      </div>
+      <div class="col-md-4">
+        <label for="energy_consumed" class="form-label">Energy Consumed (kWh)</label>
+        <input type="number" step="0.01" min="0" class="form-control" id="energy_consumed"
+               name="energy_consumed" value="{{ session.energy_consumed if session else '' }}">
+      </div>
+      <div class="col-md-4">
+        <label for="total_amount" class="form-label">Total Amount (₹)</label>
+        <input type="number" step="0.01" min="0" class="form-control" id="total_amount"
+               name="total_amount" value="{{ session.total_amount if session else '' }}">
+      </div>
+      <div class="col-md-4">
+        <label for="status" class="form-label">Status</label>
+        <select class="form-select" id="status" name="status">
+          {% for s in ['Active','Completed','Cancelled'] %}
+          <option value="{{ s }}" {% if session and session.status == s %}selected{% elif not session and s == 'Active' %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+      <button type="submit" class="btn btn-primary btn-sm">{{ 'Update' if session else 'Create' }} Session</button>
+      <a href="{{ url_for('sessions.list_sessions') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

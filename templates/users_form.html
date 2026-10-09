@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if user else 'Add' }} User{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h4>{{ 'Edit' if user else 'Add' }} User</h4>
+  <a href="{{ url_for('users.list_users') }}" class="btn btn-outline-secondary btn-sm mt-1">← Back to Users</a>
+</div>
+
+<div class="form-container">
+  <form method="post" novalidate>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label for="full_name" class="form-label">Full Name <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" id="full_name" name="full_name"
+               value="{{ user.full_name if user else '' }}" required>
+      </div>
+      <div class="col-md-6">
+        <label for="phone" class="form-label">Phone <span class="text-danger">*</span></label>
+        <input type="tel" class="form-control" id="phone" name="phone"
+               value="{{ user.phone if user else '' }}" required>
+      </div>
+      <div class="col-md-6">
+        <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+        <input type="email" class="form-control" id="email" name="email"
+               value="{{ user.email if user else '' }}" required>
+      </div>
+      <div class="col-md-6">
+        <label for="password" class="form-label">
+          Password {% if not user %}<span class="text-danger">*</span>{% else %}<span class="text-muted small">(leave blank to keep current)</span>{% endif %}
+        </label>
+        <input type="password" class="form-control" id="password" name="password"
+               {% if not user %}required{% endif %}>
+      </div>
+      <div class="col-12">
+        <label for="address" class="form-label">Address</label>
+        <textarea class="form-control" id="address" name="address" rows="2">{{ user.address if user else '' }}</textarea>
+      </div>
+      <div class="col-md-4">
+        <label for="account_status" class="form-label">Account Status</label>
+        <select class="form-select" id="account_status" name="account_status">
+          {% for s in ['Active','Inactive','Suspended'] %}
+          <option value="{{ s }}" {% if user and user.account_status == s %}selected{% elif not user and s == 'Active' %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="mt-4 d-flex gap-2">
+      <button type="submit" class="btn btn-primary btn-sm">{{ 'Update User' if user else 'Add User' }}</button>
+      <a href="{{ url_for('users.list_users') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
