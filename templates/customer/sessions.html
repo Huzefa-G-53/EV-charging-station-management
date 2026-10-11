@@ -1,0 +1,68 @@
+{% extends 'customer/base.html' %}
+{% block title %}Charging History{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h4>Charging History & Activity</h4>
+    <span class="text-muted small">All charging logs recorded for your registered vehicles</span>
+  </div>
+  <a href="{{ url_for('customer.start_session') }}" class="btn btn-primary btn-sm">⚡ Start New Charge</a>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-hover table-bordered align-middle">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Station & Charger</th>
+        <th>Vehicle</th>
+        <th>Start Time</th>
+        <th>End Time</th>
+        <th>Energy (kWh)</th>
+        <th>Total Cost</th>
+        <th>Session Status</th>
+        <th>Payment</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in sessions %}
+      <tr>
+        <td>#{{ s.session_id }}</td>
+        <td>
+          <div class="fw-semibold">{{ s.station_name }}</div>
+          <div class="text-muted small">Charger #{{ s.charger_id }} • {{ s.charger_type }} ({{ s.power_rating }} kW)</div>
+        </td>
+        <td>
+          <div class="font-monospace fw-medium">{{ s.vehicle_number }}</div>
+          <div class="text-muted small">{{ s.model }}</div>
+        </td>
+        <td class="small">{{ s.start_time.strftime('%d %b %Y, %I:%M %p') }}</td>
+        <td class="small">{{ s.end_time.strftime('%d %b %Y, %I:%M %p') if s.end_time else '—' }}</td>
+        <td>{{ s.energy_consumed or '—' }}</td>
+        <td class="fw-bold">{{ '₹%.2f'|format(s.total_amount) if s.total_amount else '—' }}</td>
+        <td>
+          {% if s.status == 'Completed' %}
+            <span class="badge bg-success">Completed</span>
+          {% elif s.status == 'Active' %}
+            <span class="badge bg-primary">In Progress</span>
+          {% else %}
+            <span class="badge bg-secondary">{{ s.status }}</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if s.payment_status == 'Completed' %}
+            <span class="badge bg-success">Paid</span>
+          {% elif s.status == 'Completed' %}
+            <a href="{{ url_for('customer.payments') }}" class="btn btn-outline-warning btn-sm py-0 px-2" style="font-size: 0.75rem;">Pay Now</a>
+          {% else %}
+            <span class="text-muted small">Pending</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="9" class="text-center text-muted py-4">No charging sessions logged yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

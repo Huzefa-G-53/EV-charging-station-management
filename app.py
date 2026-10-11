@@ -15,6 +15,7 @@ from routes.expense_routes      import expenses_bp
 from routes.revenue_routes      import revenue_bp
 from routes.collaboration_routes import collaborations_bp
 from routes.report_routes       import reports_bp
+from routes.customer_routes     import customer_bp
 
 
 def create_app():
@@ -23,6 +24,7 @@ def create_app():
 
     # Register blueprints
     app.register_blueprint(auth_bp)
+    app.register_blueprint(customer_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(vehicles_bp)

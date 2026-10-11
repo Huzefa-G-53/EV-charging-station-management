@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}Customer Profile — {{ user.full_name }}{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h4>Customer Profile (Read-Only)</h4>
+    <span class="text-muted small">Viewing account overview for {{ user.full_name }}</span>
+  </div>
+  <a href="{{ url_for('users.list_users') }}" class="btn btn-outline-secondary btn-sm">← Back to Customers</a>
+</div>
+
+<div class="row g-3">
+  <!-- Customer Details Card -->
+  <div class="col-md-5">
+    <div class="card border">
+      <div class="card-header bg-light py-2 fw-semibold">Customer Information</div>
+      <div class="card-body">
+        <table class="table table-sm table-borderless mb-0">
+          <tr>
+            <th class="text-muted" style="width: 140px;">Customer ID:</th>
+            <td>#{{ user.user_id }}</td>
+          </tr>
+          <tr>
+            <th class="text-muted">Full Name:</th>
+            <td class="fw-medium">{{ user.full_name }}</td>
+          </tr>
+          <tr>
+            <th class="text-muted">Phone:</th>
+            <td>{{ user.phone }}</td>
+          </tr>
+          <tr>
+            <th class="text-muted">Email:</th>
+            <td>{{ user.email }}</td>
+          </tr>
+          <tr>
+            <th class="text-muted">Registered:</th>
+            <td>{{ user.created_at.strftime('%d %b %Y, %I:%M %p') if user.created_at else '—' }}</td>
+          </tr>
+          <tr>
+            <th class="text-muted">Account Status:</th>
+            <td>
+              {% if user.account_status == 'Active' %}
+                <span class="badge bg-success">Active</span>
+              {% elif user.account_status == 'Suspended' %}
+                <span class="badge bg-danger">Suspended</span>
+              {% else %}
+                <span class="badge bg-secondary">Inactive</span>
+              {% endif %}
+            </td>
+          </tr>
+        </table>
+
+        <div class="alert alert-info py-2 px-3 mt-3 mb-0 small">
+          ℹ️ <strong>Privacy Protection:</strong> Customer personal profile data (address, credentials) cannot be modified by administrators. Only the customer can update their personal information through their self-service portal.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Registered Vehicles -->
+  <div class="col-md-7">
+    <div class="card border mb-3">
+      <div class="card-header bg-light py-2 fw-semibold">Registered Vehicles ({{ vehicles|length }})</div>
+      <div class="card-body p-0">
+        <table class="table table-sm table-hover mb-0">
+          <thead>
+            <tr>
+              <th>Plate No.</th>
+              <th>Make & Model</th>
+              <th>Type</th>
+              <th>Battery</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for v in vehicles %}
+            <tr>
+              <td class="fw-semibold">{{ v.vehicle_number }}</td>
+              <td>{{ v.brand }} {{ v.model }}</td>
+              <td>{{ v.vehicle_type }}</td>
+              <td>{{ v.battery_capacity }} kWh</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-center text-muted py-3">No registered vehicles.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Recent Sessions -->
+    <div class="card border">
+      <div class="card-header bg-light py-2 fw-semibold">Recent Charging Activity</div>
+      <div class="card-body p-0">
+        <table class="table table-sm table-hover mb-0">
+          <thead>
+            <tr>
+              <th>Session</th>
+              <th>Station / Charger</th>
+              <th>Vehicle</th>
+              <th>Status</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in recent_sessions %}
+            <tr>
+              <td>#{{ s.session_id }}</td>
+              <td>{{ s.station_name }} ({{ s.charger_type }})</td>
+              <td>{{ s.vehicle_number }}</td>
+              <td>
+                <span class="badge {% if s.status == 'Completed' %}bg-success{% elif s.status == 'Active' %}bg-primary{% else %}bg-secondary{% endif %}">
+                  {{ s.status }}
+                </span>
+              </td>
+              <td>{{ '₹%.2f'|format(s.total_amount) if s.total_amount else '—' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center text-muted py-3">No charging history.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -31,18 +31,20 @@
              href="{{ url_for('dashboard.index') }}">Dashboard</a>
         </li>
 
-        <!-- Users & Vehicles -->
+        <!-- Customers & Vehicles -->
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Users</a>
+          <a class="nav-link dropdown-toggle {% if request.endpoint and (request.endpoint.startswith('users') or request.endpoint.startswith('vehicles')) %}active{% endif %}"
+             href="#" data-bs-toggle="dropdown">Customers</a>
           <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="{{ url_for('users.list_users') }}">Users</a></li>
-            <li><a class="dropdown-item" href="{{ url_for('vehicles.list_vehicles') }}">Vehicles</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('users.list_users') }}">Customer Directory</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('vehicles.list_vehicles') }}">Vehicle Registry</a></li>
           </ul>
         </li>
 
         <!-- Stations & Chargers -->
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Stations</a>
+          <a class="nav-link dropdown-toggle {% if request.endpoint and (request.endpoint.startswith('stations') or request.endpoint.startswith('chargers')) %}active{% endif %}"
+             href="#" data-bs-toggle="dropdown">Stations</a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="{{ url_for('stations.list_stations') }}">Charging Stations</a></li>
             <li><a class="dropdown-item" href="{{ url_for('chargers.list_chargers') }}">Chargers</a></li>
@@ -51,7 +53,8 @@
 
         <!-- Operations -->
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Operations</a>
+          <a class="nav-link dropdown-toggle {% if request.endpoint and (request.endpoint.startswith('sessions') or request.endpoint.startswith('payments')) %}active{% endif %}"
+             href="#" data-bs-toggle="dropdown">Operations</a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="{{ url_for('sessions.list_sessions') }}">Charging Sessions</a></li>
             <li><a class="dropdown-item" href="{{ url_for('payments.list_payments') }}">Payments</a></li>
@@ -60,7 +63,8 @@
 
         <!-- Staff & Maintenance -->
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Staff</a>
+          <a class="nav-link dropdown-toggle {% if request.endpoint and (request.endpoint.startswith('staff') or request.endpoint.startswith('maintenance')) %}active{% endif %}"
+             href="#" data-bs-toggle="dropdown">Staff</a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="{{ url_for('staff.list_staff') }}">Staff</a></li>
             <li><a class="dropdown-item" href="{{ url_for('maintenance.list_maintenance') }}">Maintenance</a></li>
@@ -69,7 +73,8 @@
 
         <!-- Financials -->
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Financials</a>
+          <a class="nav-link dropdown-toggle {% if request.endpoint and (request.endpoint.startswith('expenses') or request.endpoint.startswith('revenue') or request.endpoint.startswith('collaborations')) %}active{% endif %}"
+             href="#" data-bs-toggle="dropdown">Financials</a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="{{ url_for('expenses.list_expenses') }}">Expenses</a></li>
             <li><a class="dropdown-item" href="{{ url_for('revenue.list_revenue') }}">Revenue</a></li>
@@ -83,8 +88,9 @@
              href="{{ url_for('reports.index') }}">Reports</a>
         </li>
 
-        <li class="nav-item ms-lg-2">
-          <a class="nav-link logout-link" href="{{ url_for('auth.logout') }}">Logout</a>
+        <li class="nav-item ms-lg-3 pt-2 pt-lg-0 border-top border-lg-0 border-secondary">
+          <span class="text-light small opacity-75 me-2 d-none d-lg-inline">🛡️ {{ session.get('admin_name', 'Administrator') }}</span>
+          <a class="nav-link d-inline-block logout-link py-1 px-2" href="{{ url_for('auth.logout') }}">Logout</a>
         </li>
 
       </ul>

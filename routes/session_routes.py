@@ -59,11 +59,17 @@ def add_session():
             flash('User, vehicle, charger, and start time are required.', 'danger')
             return render_template('sessions_form.html', session=None, users=users, vehicles=vehicles, chargers=chargers)
 
+        # Verify charger is Available
+        charger = execute_query('SELECT status, price_per_kwh FROM charger WHERE charger_id = %s', (charger_id,), fetchone=True)
+        if not charger or charger['status'] != 'Available':
+            flash('Selected charger is currently In Use or Under Maintenance.', 'danger')
+            return render_template('sessions_form.html', session=None, users=users, vehicles=vehicles, chargers=chargers)
+
         execute_query(
             'INSERT INTO charging_session (user_id, vehicle_id, charger_id, start_time, status) VALUES (%s,%s,%s,%s,%s)',
             (user_id, vehicle_id, charger_id, start_time, status)
         )
-        flash('Charging session created.', 'success')
+        flash('Charging session created successfully.', 'success')
         return redirect(url_for('sessions.list_sessions'))
 
     return render_template('sessions_form.html', session=None, users=users, vehicles=vehicles, chargers=chargers)
@@ -80,7 +86,7 @@ def edit_session(session_id):
     users    = execute_query('SELECT user_id, full_name FROM user ORDER BY full_name', fetch=True)
     vehicles = execute_query('SELECT vehicle_id, vehicle_number, brand, model FROM vehicle ORDER BY vehicle_number', fetch=True)
     chargers = execute_query(
-        'SELECT c.charger_id, c.charger_type, c.power_rating, cs.station_name FROM charger c JOIN charging_station cs ON c.station_id=cs.station_id ORDER BY cs.station_name',
+        'SELECT c.charger_id, c.charger_type, c.power_rating, c.price_per_kwh, cs.station_name FROM charger c JOIN charging_station cs ON c.station_id=cs.station_id ORDER BY cs.station_name',
         fetch=True
     )
 
@@ -93,6 +99,12 @@ def edit_session(session_id):
         energy_consumed = request.form.get('energy_consumed') or None
         total_amount    = request.form.get('total_amount') or None
         status          = request.form.get('status', 'Active')
+
+        # Auto-compute total_amount from price_per_kwh if energy_consumed is provided
+        if energy_consumed and not total_amount:
+            charger_info = execute_query('SELECT price_per_kwh FROM charger WHERE charger_id = %s', (charger_id,), fetchone=True)
+            if charger_info:
+                total_amount = round(float(energy_consumed) * float(charger_info['price_per_kwh']), 2)
 
         execute_query(
             '''UPDATE charging_session SET user_id=%s, vehicle_id=%s, charger_id=%s,

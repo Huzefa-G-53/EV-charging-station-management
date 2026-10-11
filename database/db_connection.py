@@ -1,20 +1,50 @@
 import mysql.connector
+from mysql.connector import pooling
 from config import Config
+
+_pool = None
 
 
 def get_connection():
-    """Open and return a new MySQL database connection."""
-    return mysql.connector.connect(
-        host=Config.DB_HOST,
-        user=Config.DB_USER,
-        password=Config.DB_PASSWORD,
-        database=Config.DB_NAME
-    )
+    """
+    Get a database connection from the connection pool.
+    Initializes the pool on first invocation.
+    """
+    global _pool
+    if _pool is None:
+        try:
+            _pool = pooling.MySQLConnectionPool(
+                pool_name="ev_pool",
+                pool_size=5,
+                pool_reset_session=True,
+                host=Config.DB_HOST,
+                user=Config.DB_USER,
+                password=Config.DB_PASSWORD,
+                database=Config.DB_NAME
+            )
+        except Exception:
+            # Fallback to direct connection if pooling initialization fails
+            return mysql.connector.connect(
+                host=Config.DB_HOST,
+                user=Config.DB_USER,
+                password=Config.DB_PASSWORD,
+                database=Config.DB_NAME
+            )
+    try:
+        return _pool.get_connection()
+    except Exception:
+        # Fallback to direct connection if pool exhausted
+        return mysql.connector.connect(
+            host=Config.DB_HOST,
+            user=Config.DB_USER,
+            password=Config.DB_PASSWORD,
+            database=Config.DB_NAME
+        )
 
 
 def execute_query(query, params=None, fetch=False, fetchone=False):
     """
-    Execute a SQL query and return results or last insert ID.
+    Execute a SQL query using a pooled connection and return results or last insert ID.
 
     Args:
         query    (str):   SQL statement to execute.
@@ -25,7 +55,7 @@ def execute_query(query, params=None, fetch=False, fetchone=False):
     Returns:
         list | dict | int | None
     """
-    conn   = get_connection()
+    conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute(query, params or ())
@@ -40,3 +70,4 @@ def execute_query(query, params=None, fetch=False, fetchone=False):
         cursor.close()
         conn.close()
     return result
+

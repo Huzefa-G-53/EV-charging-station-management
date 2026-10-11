@@ -1,0 +1,178 @@
+{% extends 'customer/base.html' %}
+{% block title %}Driver Dashboard{% endblock %}
+{% block content %}
+<div class="page-header d-flex flex-wrap justify-content-between align-items-center pb-3">
+  <div>
+    <h4>Welcome, {{ user.full_name }} 👋</h4>
+    <span class="text-muted small">GreenVolt EV Driver Account & Charging Management</span>
+  </div>
+  <div class="d-flex gap-2 mt-2 mt-md-0">
+    {% if not active_session %}
+      <a href="{{ url_for('customer.start_session') }}" class="btn btn-primary btn-sm">⚡ Start Charging</a>
+    {% endif %}
+    <a href="{{ url_for('customer.add_vehicle') }}" class="btn btn-outline-secondary btn-sm">+ Add Vehicle</a>
+  </div>
+</div>
+
+<!-- Active Charging Alert Card (if session is in progress) -->
+{% if active_session %}
+<div class="card border-primary shadow-sm mb-4" style="border-width: 2px;">
+  <div class="card-body p-4 bg-light">
+    <div class="d-flex flex-wrap justify-content-between align-items-center">
+      <div>
+        <div class="d-flex align-items-center mb-1">
+          <span class="charging-pulse me-2"></span>
+          <span class="fw-bold text-primary text-uppercase" style="letter-spacing: 0.5px; font-size: 0.85rem;">Active Charging In Progress</span>
+        </div>
+        <h5 class="mb-1 fw-bold">{{ active_session.station_name }}</h5>
+        <p class="text-muted small mb-2">{{ active_session.station_address }}</p>
+        <div class="d-flex flex-wrap gap-3 small">
+          <span><strong>Charger:</strong> #{{ active_session.charger_id }} ({{ active_session.charger_type }})</span>
+          <span><strong>Vehicle:</strong> {{ active_session.vehicle_number }} ({{ active_session.model }})</span>
+          <span><strong>Rate:</strong> ₹{{ active_session.price_per_kwh }}/kWh</span>
+          <span><strong>Started:</strong> {{ active_session.start_time.strftime('%I:%M %p') }}</span>
+        </div>
+      </div>
+      <div class="mt-3 mt-md-0">
+        <button type="button" class="btn btn-danger btn-sm px-3 py-2" data-bs-toggle="modal" data-bs-target="#stopSessionModal">
+          ⏹️ Complete & Stop Charging
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Stop Session Modal -->
+<div class="modal fade" id="stopSessionModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="{{ url_for('customer.stop_session', session_id=active_session.session_id) }}" method="post">
+        <div class="modal-header">
+          <h5 class="modal-title">Complete Charging Session</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-header bg-light py-2">
+          <small class="text-muted">Charger Rate: ₹{{ active_session.price_per_kwh }} per kWh</small>
+        </div>
+        <div class="modal-body">
+          <p class="small text-secondary mb-3">
+            Are you ready to unplug? Enter the energy units consumed or proceed with the automated meter reading.
+          </p>
+          <div class="mb-3">
+            <label class="form-label">Energy Consumed (kWh)</label>
+            <input type="number" step="0.01" min="1" max="150" class="form-control" name="energy_consumed"
+                   placeholder="e.g. 28.50" value="25.00" required>
+            <div class="form-text">Estimated bill will be computed automatically based on station tariff.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Confirm & Generate Bill</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Stats Cards Bar -->
+<div class="stats-bar mb-4">
+  <div class="stat-cell">
+    <div class="stat-val">{{ vehicles|length }}</div>
+    <div class="stat-lbl">Registered Vehicles</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-val">{{ stats.total_sessions }}</div>
+    <div class="stat-lbl">Completed Sessions</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-val">{{ '%.1f'|format(stats.total_kwh) }}</div>
+    <div class="stat-lbl">Total Energy (kWh)</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-val">₹{{ '%.0f'|format(stats.total_spent) }}</div>
+    <div class="stat-lbl">Total Spent</div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- My Garage (Vehicles) -->
+  <div class="col-lg-5">
+    <div class="card border">
+      <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <span class="fw-semibold" style="font-size: 0.9rem;">🚗 My EV Garage</span>
+        <a href="{{ url_for('customer.add_vehicle') }}" class="btn btn-outline-primary btn-sm">+ Add</a>
+      </div>
+      <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+          {% for v in vehicles %}
+          <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+            <div>
+              <div class="fw-bold">{{ v.brand }} {{ v.model }}</div>
+              <div class="small text-muted">
+                <span class="font-monospace text-dark fw-medium">{{ v.vehicle_number }}</span> • {{ v.vehicle_type }} • {{ v.battery_capacity }} kWh
+              </div>
+            </div>
+            <div class="d-flex gap-1">
+              <a href="{{ url_for('customer.edit_vehicle', vehicle_id=v.vehicle_id) }}" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.75rem;">Edit</a>
+            </div>
+          </div>
+          {% else %}
+          <div class="text-center py-4 text-muted small">
+            No EV registered in your garage yet.<br>
+            <a href="{{ url_for('customer.add_vehicle') }}" class="btn btn-sm btn-primary mt-2">+ Register Your First EV</a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Charging History -->
+  <div class="col-lg-7">
+    <div class="card border">
+      <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <span class="fw-semibold" style="font-size: 0.9rem;">⚡ Recent Charging Activity</span>
+        <a href="{{ url_for('customer.sessions') }}" class="btn btn-outline-secondary btn-sm" style="font-size: 0.75rem;">View All</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Station</th>
+              <th>Vehicle</th>
+              <th>Energy</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in recent_sessions %}
+            <tr>
+              <td>
+                <div class="fw-medium">{{ s.station_name }}</div>
+                <div class="text-muted" style="font-size: 0.72rem;">{{ s.charger_type }}</div>
+              </td>
+              <td class="font-monospace small">{{ s.vehicle_number }}</td>
+              <td>{{ s.energy_consumed or '0.00' }} kWh</td>
+              <td class="fw-semibold">₹{{ '%.2f'|format(s.total_amount) if s.total_amount else '—' }}</td>
+              <td>
+                {% if s.payment_status == 'Completed' %}
+                  <span class="badge bg-success">Paid</span>
+                {% elif s.status == 'Completed' %}
+                  <span class="badge bg-warning text-dark">Unpaid</span>
+                {% else %}
+                  <span class="badge bg-info text-dark">Active</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center py-4 text-muted small">No charging history recorded yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

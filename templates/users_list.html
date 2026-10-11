@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}Users{% endblock %}
+{% block title %}Customers{% endblock %}
 {% block content %}
 <div class="page-header d-flex justify-content-between align-items-end">
   <div>
-    <h4>User Management</h4>
-    <span class="text-muted small">Manage all registered EV users</span>
+    <h4>Customer Directory</h4>
+    <span class="text-muted small">Registered EV drivers and station patrons (Read-only operational view)</span>
   </div>
-  <a href="{{ url_for('users.add_user') }}" class="btn btn-primary btn-sm">+ Add User</a>
+  <a href="{{ url_for('users.add_user') }}" class="btn btn-primary btn-sm">+ Register Customer</a>
 </div>
 
 <!-- Search -->
@@ -24,23 +24,29 @@
     <thead>
       <tr>
         <th>#</th>
-        <th>Full Name</th>
+        <th>Customer Name</th>
         <th>Phone</th>
         <th>Email</th>
-        <th>Address</th>
-        <th>Status</th>
+        <th class="text-center">Vehicles</th>
+        <th class="text-center">Sessions</th>
+        <th>Account Status</th>
         <th>Registered</th>
-        <th>Actions</th>
+        <th class="text-center">Operational Actions</th>
       </tr>
     </thead>
     <tbody>
       {% for u in users %}
       <tr>
         <td>{{ u.user_id }}</td>
-        <td>{{ u.full_name }}</td>
+        <td class="fw-medium">{{ u.full_name }}</td>
         <td>{{ u.phone }}</td>
         <td>{{ u.email }}</td>
-        <td class="text-muted small">{{ u.address or '—' }}</td>
+        <td class="text-center">
+          <span class="badge bg-light text-dark border">{{ u.vehicle_count }}</span>
+        </td>
+        <td class="text-center">
+          <span class="badge bg-light text-dark border">{{ u.session_count }}</span>
+        </td>
         <td>
           {% if u.account_status == 'Active' %}
             <span class="badge bg-success">Active</span>
@@ -51,8 +57,20 @@
           {% endif %}
         </td>
         <td class="small text-muted">{{ u.created_at.strftime('%d %b %Y') if u.created_at else '—' }}</td>
-        <td>
-          <a href="{{ url_for('users.edit_user', user_id=u.user_id) }}" class="btn btn-outline-secondary btn-sm">Edit</a>
+        <td class="text-center">
+          <!-- Read-only profile view -->
+          <a href="{{ url_for('users.view_user', user_id=u.user_id) }}" class="btn btn-outline-secondary btn-sm">View Profile</a>
+          
+          <!-- Status Toggle (Moderation) -->
+          <form action="{{ url_for('users.toggle_status', user_id=u.user_id) }}" method="post" style="display:inline;">
+            {% if u.account_status == 'Active' %}
+              <button type="submit" class="btn btn-outline-warning btn-sm" onclick="return confirm('Suspend this customer account?')">Suspend</button>
+            {% else %}
+              <button type="submit" class="btn btn-outline-success btn-sm">Activate</button>
+            {% endif %}
+          </form>
+
+          <!-- Delete -->
           <form action="{{ url_for('users.delete_user', user_id=u.user_id) }}" method="post"
                 style="display:inline;" onsubmit="return confirmDelete()">
             <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
@@ -60,7 +78,7 @@
         </td>
       </tr>
       {% else %}
-      <tr><td colspan="8" class="text-center text-muted py-3">No users found.</td></tr>
+      <tr><td colspan="9" class="text-center text-muted py-3">No customers found.</td></tr>
       {% endfor %}
     </tbody>
   </table>

@@ -1,0 +1,120 @@
+{% extends 'customer/base.html' %}
+{% block title %}My Profile & Privacy{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h4>My Driver Profile & Security</h4>
+    <span class="text-muted small">Update your personal contact details, security credentials, and privacy settings</span>
+  </div>
+</div>
+
+<div class="row g-4" style="max-width: 960px;">
+  <!-- Edit Profile Info -->
+  <div class="col-md-6">
+    <div class="card border shadow-sm h-100">
+      <div class="card-header bg-white py-3 fw-semibold">
+        👤 Personal Contact Details
+      </div>
+      <div class="card-body">
+        <form action="{{ url_for('customer.profile') }}" method="post">
+          <div class="mb-3">
+            <label for="full_name" class="form-label">Full Name *</label>
+            <input type="text" class="form-control" id="full_name" name="full_name"
+                   value="{{ user.full_name }}" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="email" class="form-label">Email Address</label>
+            <input type="email" class="form-control bg-light" id="email" value="{{ user.email }}" readonly>
+            <div class="form-text">Primary login identifier (Cannot be altered).</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="phone" class="form-label">Phone Number *</label>
+            <input type="tel" class="form-control" id="phone" name="phone"
+                   value="{{ user.phone }}" required>
+          </div>
+
+          <div class="mb-4">
+            <label for="address" class="form-label">Address / City</label>
+            <textarea class="form-control" id="address" name="address" rows="2">{{ user.address or '' }}</textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-sm px-3">Update Profile</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Security & Password -->
+  <div class="col-md-6">
+    <div class="card border shadow-sm mb-4">
+      <div class="card-header bg-white py-3 fw-semibold">
+        🔒 Security & Password
+      </div>
+      <div class="card-body">
+        <form action="{{ url_for('customer.change_password') }}" method="post">
+          <div class="mb-3">
+            <label for="current_password" class="form-label">Current Password *</label>
+            <input type="password" class="form-control" id="current_password" name="current_password" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="new_password" class="form-label">New Password (min 6) *</label>
+            <input type="password" class="form-control" id="new_password" name="new_password" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="confirm_password" class="form-label">Confirm New Password *</label>
+            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+          </div>
+
+          <button type="submit" class="btn btn-outline-secondary btn-sm">Change Password</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Danger Zone: Account Self-Deletion -->
+    <div class="card border border-danger shadow-sm">
+      <div class="card-header bg-danger text-white py-2 fw-semibold small">
+        ⚠️ Danger Zone: Delete My Account
+      </div>
+      <div class="card-body p-3">
+        <p class="small text-muted mb-3">
+          Permanently remove your driver profile and vehicle registrations from GreenVolt. This action cannot be reversed.
+        </p>
+        <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+          Delete My Account
+        </button>
+
+        <!-- Delete Account Modal -->
+        <div class="modal fade" id="deleteAccountModal" tabindex="-1">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <form action="{{ url_for('customer.delete_account') }}" method="post">
+                <div class="modal-header">
+                  <h5 class="modal-title text-danger">Confirm Account Deletion</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                  <p class="small text-secondary mb-3">
+                    Are you sure? All your personal information, profile records, and vehicle registrations will be permanently deleted.
+                  </p>
+                  <div class="mb-3">
+                    <label class="form-label small fw-bold">Type "DELETE" below to confirm:</label>
+                    <input type="text" class="form-control font-monospace" name="confirm_delete" placeholder="DELETE" required>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" class="btn btn-danger btn-sm">Permanently Delete Account</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

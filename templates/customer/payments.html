@@ -1,0 +1,135 @@
+{% extends 'customer/base.html' %}
+{% block title %}Bills & Invoices{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h4>Billing & Invoices</h4>
+    <span class="text-muted small">Session receipts, payment statuses, and settlement</span>
+  </div>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-hover table-bordered align-middle">
+    <thead>
+      <tr>
+        <th>Invoice #</th>
+        <th>Session</th>
+        <th>Station & Charger</th>
+        <th>Vehicle</th>
+        <th>Units (kWh)</th>
+        <th>Amount</th>
+        <th>Payment Date</th>
+        <th>Method</th>
+        <th>Status</th>
+        <th class="text-center">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in bills %}
+      <tr>
+        <td class="font-monospace fw-semibold">
+          {% if b.payment_id %}INV-{{ '%05d'|format(b.payment_id) }}{% else %}PENDING-{{ b.session_id }}{% endif %}
+        </td>
+        <td>#{{ b.session_id }}</td>
+        <td>
+          <div class="fw-medium">{{ b.station_name }}</div>
+          <div class="text-muted small">{{ b.charger_type }}</div>
+        </td>
+        <td class="font-monospace small">{{ b.vehicle_number }}</td>
+        <td>{{ b.energy_consumed or '0.00' }} kWh</td>
+        <td class="fw-bold">₹{{ '%.2f'|format(b.total_amount) }}</td>
+        <td class="small">{{ b.payment_date.strftime('%d %b %Y') if b.payment_date else '—' }}</td>
+        <td>{{ b.payment_method or '—' }}</td>
+        <td>
+          {% if b.bill_status == 'Completed' %}
+            <span class="badge bg-success">Paid</span>
+          {% else %}
+            <span class="badge bg-warning text-dark">Unpaid</span>
+          {% endif %}
+        </td>
+        <td class="text-center">
+          {% if b.bill_status == 'Unpaid' %}
+            <button type="button" class="btn btn-primary btn-sm py-1 px-3" data-bs-toggle="modal" data-bs-target="#payModal{{ b.session_id }}">
+              Pay Now
+            </button>
+
+            <!-- Payment Modal -->
+            <div class="modal fade" id="payModal{{ b.session_id }}" tabindex="-1">
+              <div class="modal-dialog">
+                <div class="modal-content text-start">
+                  <form action="{{ url_for('customer.pay_bill', session_id=b.session_id) }}" method="post">
+                    <div class="modal-header">
+                      <h5 class="modal-title">Settle Charging Bill</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="bg-light p-3 rounded mb-3 text-center">
+                        <div class="text-muted small text-uppercase">Total Payable Amount</div>
+                        <div class="fs-3 fw-bold text-dark">₹{{ '%.2f'|format(b.total_amount) }}</div>
+                        <div class="small text-muted">{{ b.station_name }} • {{ b.energy_consumed }} kWh</div>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label fw-semibold">Select Payment Gateway / Method *</label>
+                        <select class="form-select" name="payment_method" required>
+                          <option value="UPI">⚡ UPI (Google Pay, PhonePe, Paytm)</option>
+                          <option value="Card">💳 Credit / Debit Card</option>
+                          <option value="Net Banking">🏦 Net Banking</option>
+                          <option value="Wallet">👛 GreenVolt EV Wallet</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                      <button type="submit" class="btn btn-success btn-sm">Complete Payment</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          {% else %}
+            <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" data-bs-toggle="modal" data-bs-target="#receiptModal{{ b.payment_id }}" style="font-size: 0.75rem;">
+              View Receipt
+            </button>
+
+            <!-- Receipt Modal -->
+            <div class="modal fade" id="receiptModal{{ b.payment_id }}" tabindex="-1">
+              <div class="modal-dialog">
+                <div class="modal-content text-start">
+                  <div class="modal-header bg-light">
+                    <h5 class="modal-title fs-6">Receipt: INV-{{ '%05d'|format(b.payment_id) }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body p-4">
+                    <div class="text-center mb-4 border-bottom pb-3">
+                      <div class="fs-4">⚡ GreenVolt EV</div>
+                      <div class="text-muted small">Charging Station Management System</div>
+                      <div class="badge bg-success mt-2">PAYMENT SUCCESSFUL</div>
+                    </div>
+
+                    <table class="table table-sm table-borderless small mb-3">
+                      <tr><th class="text-muted">Station:</th><td class="text-end">{{ b.station_name }}</td></tr>
+                      <tr><th class="text-muted">Vehicle:</th><td class="text-end font-monospace">{{ b.vehicle_number }}</td></tr>
+                      <tr><th class="text-muted">Energy Consumed:</th><td class="text-end">{{ b.energy_consumed }} kWh</td></tr>
+                      <tr><th class="text-muted">Payment Method:</th><td class="text-end">{{ b.payment_method }}</td></tr>
+                      <tr><th class="text-muted">Payment Date:</th><td class="text-end">{{ b.payment_date.strftime('%d %b %Y') if b.payment_date else '—' }}</td></tr>
+                      <tr class="border-top"><th class="fs-6">Total Amount Paid:</th><td class="text-end fs-6 fw-bold text-dark">₹{{ '%.2f'|format(b.total_amount) }}</td></tr>
+                    </table>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="window.print()">Print Receipt</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="10" class="text-center text-muted py-4">No invoices found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends 'customer/base.html' %}
+{% block title %}Start Charging Session{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h4>Initiate EV Charging</h4>
+    <span class="text-muted small">Select your vehicle and plug into an available station bay</span>
+  </div>
+  <a href="{{ url_for('customer.dashboard') }}" class="btn btn-outline-secondary btn-sm">← Back to Dashboard</a>
+</div>
+
+<div class="form-container" style="max-width: 650px;">
+  <form method="post">
+    <!-- Select Vehicle -->
+    <div class="mb-4">
+      <label for="vehicle_id" class="form-label fw-semibold">1. Select Your Vehicle *</label>
+      <select class="form-select" id="vehicle_id" name="vehicle_id" required>
+        <option value="">Choose an EV from your garage…</option>
+        {% for v in vehicles %}
+          <option value="{{ v.vehicle_id }}">
+            {{ v.vehicle_number }} — {{ v.brand }} {{ v.model }} ({{ v.battery_capacity }} kWh)
+          </option>
+        {% endfor %}
+      </select>
+      <div class="form-text">
+        Don't see your car? <a href="{{ url_for('customer.add_vehicle') }}">Register a new EV first</a>.
+      </div>
+    </div>
+
+    <!-- Select Charger -->
+    <div class="mb-4">
+      <label for="charger_id" class="form-label fw-semibold">2. Select Charging Bay *</label>
+      <select class="form-select" id="charger_id" name="charger_id" required>
+        <option value="">Select an available charger…</option>
+        {% for c in chargers %}
+          <option value="{{ c.charger_id }}" {% if preset_charger and preset_charger|int == c.charger_id %}selected{% endif %}>
+            [{{ c.station_name }}] Bay #{{ c.charger_id }} — {{ c.charger_type }} ({{ c.power_rating }} kW) @ ₹{{ c.price_per_kwh }}/kWh
+          </option>
+        {% endfor %}
+      </select>
+      <div class="form-text">Only stations and charger bays with live "Available" status are listed.</div>
+    </div>
+
+    <!-- Pricing Summary Notice -->
+    <div class="card bg-light border p-3 mb-4 small">
+      <div class="fw-semibold text-dark mb-1">⚡ Automated Metering & Billing Policy:</div>
+      <ul class="mb-0 ps-3 text-muted">
+        <li>Charger status will immediately toggle to <span class="badge bg-danger">In Use</span> to prevent double-booking.</li>
+        <li>Billing is calculated precisely on consumed kilowatt-hours (kWh) at session completion.</li>
+        <li>Payment invoice will be generated directly upon unplugging.</li>
+      </ul>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary btn-sm px-4 py-2">
+        ⚡ Connect Charger & Begin Session
+      </button>
+      <a href="{{ url_for('customer.dashboard') }}" class="btn btn-outline-secondary btn-sm py-2">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

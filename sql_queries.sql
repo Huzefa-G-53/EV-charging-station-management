@@ -270,3 +270,52 @@ DELETE FROM revenue WHERE revenue_id = 7;
 -- NOTE: Foreign key constraints in schema.sql are configured with ON DELETE CASCADE,
 -- so deleting a user automatically deletes their vehicles & sessions, and deleting
 -- a station automatically deletes its chargers, staff, expenses, revenue, etc.
+
+
+-- ============================================================
+-- SECTION 6: CUSTOMER PORTAL & DATA PRIVACY QUERIES
+-- (Queries executed by EV Driver / Customer Portal)
+-- ============================================================
+
+-- 6.1 Customer Login Authentication (Select user by email for hash verification)
+SELECT user_id, full_name, email, password_hash, account_status
+FROM user
+WHERE email = 'arjun@email.com';
+
+-- 6.2 Fetch Customer's Own Registered Vehicles (Privacy Partitioned by user_id)
+SELECT vehicle_id, vehicle_number, vehicle_type, brand, model, battery_capacity
+FROM vehicle
+WHERE user_id = 1
+ORDER BY vehicle_id DESC;
+
+-- 6.3 Customer Add Vehicle to Garage
+INSERT INTO vehicle (user_id, vehicle_number, vehicle_type, brand, model, battery_capacity)
+VALUES (1, 'MH04AB9999', 'SUV', 'Tata', 'Punch EV', 35.00);
+
+-- 6.4 Customer Self-Service Profile Update (Customer updates own phone & address)
+UPDATE user
+SET full_name = 'Arjun Sharma', phone = '9876543210', address = 'Connaught Place, New Delhi'
+WHERE user_id = 1;
+
+-- 6.5 Customer Password Update (Securely storing updated hash)
+UPDATE user
+SET password_hash = 'new_scrypt_hash_value'
+WHERE user_id = 1;
+
+-- 6.6 Customer Start Charging Session (Customer vehicle connects to available bay)
+INSERT INTO charging_session (user_id, vehicle_id, charger_id, start_time, status)
+VALUES (1, 1, 3, NOW(), 'Active');
+
+-- 6.7 Customer Complete Charging Session (Automated calculation of energy and amount)
+UPDATE charging_session
+SET end_time = NOW(), energy_consumed = 28.50, total_amount = 342.00, status = 'Completed'
+WHERE session_id = 13 AND user_id = 1;
+
+-- 6.8 Customer Settle Bill / Record Payment
+INSERT INTO payment (session_id, payment_date, amount, payment_method, payment_status)
+VALUES (13, CURDATE(), 342.00, 'UPI', 'Completed');
+
+-- 6.9 Customer Account Self-Deletion (Right to be Forgotten)
+DELETE FROM user
+WHERE user_id = 1;
+

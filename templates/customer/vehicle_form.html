@@ -1,0 +1,63 @@
+{% extends 'customer/base.html' %}
+{% block title %}{{ 'Edit Vehicle' if vehicle else 'Add Vehicle' }}{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h4>{{ 'Edit EV Specifications' if vehicle else 'Register New EV' }}</h4>
+    <span class="text-muted small">Enter your electric vehicle details</span>
+  </div>
+  <a href="{{ url_for('customer.vehicles') }}" class="btn btn-outline-secondary btn-sm">← Back to My Garage</a>
+</div>
+
+<div class="form-container" style="max-width: 600px;">
+  <form method="post">
+    <div class="mb-3">
+      <label for="vehicle_number" class="form-label">License Plate Number *</label>
+      <input type="text" class="form-control font-monospace" id="vehicle_number" name="vehicle_number"
+             placeholder="e.g. MH02CD1234" value="{{ vehicle.vehicle_number if vehicle else '' }}"
+             style="text-transform: uppercase;" required>
+      <div class="form-text">Enter state code and registration number.</div>
+    </div>
+
+    <div class="row g-2 mb-3">
+      <div class="col-md-6">
+        <label for="vehicle_type" class="form-label">Vehicle Body Type *</label>
+        <select class="form-select" id="vehicle_type" name="vehicle_type" required>
+          <option value="">Select type…</option>
+          {% for t in ['SUV', 'Sedan', 'Hatchback', 'Van', 'Two Wheeler', 'Commercial'] %}
+            <option value="{{ t }}" {% if vehicle and vehicle.vehicle_type == t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="battery_capacity" class="form-label">Battery Capacity (kWh) *</label>
+        <input type="number" step="0.1" min="1" max="250" class="form-control" id="battery_capacity"
+               name="battery_capacity" placeholder="e.g. 40.5"
+               value="{{ vehicle.battery_capacity if vehicle else '' }}" required>
+      </div>
+    </div>
+
+    <div class="row g-2 mb-4">
+      <div class="col-md-6">
+        <label for="brand" class="form-label">Manufacturer / Brand *</label>
+        <input type="text" class="form-control" id="brand" name="brand"
+               placeholder="e.g. Tata, MG, Hyundai, Tesla"
+               value="{{ vehicle.brand if vehicle else '' }}" required>
+      </div>
+      <div class="col-md-6">
+        <label for="model" class="form-label">Model Name *</label>
+        <input type="text" class="form-control" id="model" name="model"
+               placeholder="e.g. Nexon EV, ZS EV, Ioniq 5"
+               value="{{ vehicle.model if vehicle else '' }}" required>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary btn-sm px-4">
+        {{ 'Save Changes' if vehicle else 'Register Vehicle' }}
+      </button>
+      <a href="{{ url_for('customer.vehicles') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

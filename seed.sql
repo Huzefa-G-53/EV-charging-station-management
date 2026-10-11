@@ -50,15 +50,15 @@ INSERT INTO charger (charger_id, station_id, charger_type, power_rating, price_p
 (12, 3, 'AC Level 2 (Type 2)', 22.00, 12.00, 'Available');
 
 -- ============================================================
--- 3. USERS (6 Users)
+-- 3. USERS (6 Users with default password: user123)
 -- ============================================================
 INSERT INTO user (user_id, full_name, phone, email, password_hash, address, account_status) VALUES
-(1, 'Arjun Sharma', '9876543210', 'arjun@email.com', 'placeholder_hash', 'Connaught Place, New Delhi', 'Active'),
-(2, 'sanjay Mehta',  '9876543211', 'sanjay@email.com', 'placeholder_hash', 'Bandra West, Mumbai',        'Active'),
-(3, 'Rohan Gupta',  '9876543212', 'rohan@email.com', 'placeholder_hash', 'Indiranagar, Bengaluru',     'Active'),
-(4, 'Sneha Iyer',   '9876543213', 'sneha@email.com', 'placeholder_hash', 'South Extension, New Delhi', 'Active'),
-(5, 'Vikram Nair',  '9876543214', 'vikram@email.com', 'placeholder_hash', 'Juhu, Mumbai',                'Active'),
-(6, 'Ananya Das',   '9876543215', 'ananya@email.com', 'placeholder_hash', 'Koramangala, Bengaluru',     'Active');
+(1, 'Arjun Sharma', '9876543210', 'arjun@email.com',  'scrypt:32768:8:1$t2ub4P0oP2NQcQyr$5b9b65b074bb945a8ac52b6cd10f3b9c85607f52325624d5546bf139e63e009d8dc60f728e9c0b64d1e23d7e0b0953d34bdababbfef9635494474d712f373766', 'Connaught Place, New Delhi', 'Active'),
+(2, 'Sanjay Mehta', '9876543211', 'sanjay@email.com', 'scrypt:32768:8:1$t2ub4P0oP2NQcQyr$5b9b65b074bb945a8ac52b6cd10f3b9c85607f52325624d5546bf139e63e009d8dc60f728e9c0b64d1e23d7e0b0953d34bdababbfef9635494474d712f373766', 'Bandra West, Mumbai',        'Active'),
+(3, 'Rohan Gupta',  '9876543212', 'rohan@email.com',  'scrypt:32768:8:1$t2ub4P0oP2NQcQyr$5b9b65b074bb945a8ac52b6cd10f3b9c85607f52325624d5546bf139e63e009d8dc60f728e9c0b64d1e23d7e0b0953d34bdababbfef9635494474d712f373766', 'Indiranagar, Bengaluru',     'Active'),
+(4, 'Sneha Iyer',   '9876543213', 'sneha@email.com',  'scrypt:32768:8:1$t2ub4P0oP2NQcQyr$5b9b65b074bb945a8ac52b6cd10f3b9c85607f52325624d5546bf139e63e009d8dc60f728e9c0b64d1e23d7e0b0953d34bdababbfef9635494474d712f373766', 'South Extension, New Delhi', 'Active'),
+(5, 'Vikram Nair',  '9876543214', 'vikram@email.com', 'scrypt:32768:8:1$t2ub4P0oP2NQcQyr$5b9b65b074bb945a8ac52b6cd10f3b9c85607f52325624d5546bf139e63e009d8dc60f728e9c0b64d1e23d7e0b0953d34bdababbfef9635494474d712f373766', 'Juhu, Mumbai',                'Active'),
+(6, 'Ananya Das',   '9876543215', 'ananya@email.com', 'scrypt:32768:8:1$t2ub4P0oP2NQcQyr$5b9b65b074bb945a8ac52b6cd10f3b9c85607f52325624d5546bf139e63e009d8dc60f728e9c0b64d1e23d7e0b0953d34bdababbfef9635494474d712f373766', 'Koramangala, Bengaluru',     'Active');
 
 -- ============================================================
 -- 4. VEHICLES (6 Vehicles owned by users)

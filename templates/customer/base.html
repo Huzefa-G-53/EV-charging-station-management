@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Driver Portal{% endblock %} | GreenVolt EV</title>
+  <meta name="description" content="GreenVolt Customer Self-Service Portal for EV Drivers" />
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <style>
+    /* Customer portal accent styling */
+    .customer-nav {
+      background-color: #162438 !important;
+      border-bottom: 2px solid #2ecc71;
+    }
+    .badge-driver {
+      background-color: rgba(46, 204, 113, 0.2);
+      color: #27ae60;
+      border: 1px solid rgba(46, 204, 113, 0.4);
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 12px;
+    }
+    .charging-pulse {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #2ecc71;
+      box-shadow: 0 0 0 rgba(46, 204, 113, 0.7);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+      70% { box-shadow: 0 0 0 8px rgba(46, 204, 113, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Navigation ─────────────────────────────────────────────────────────── -->
+<nav class="navbar navbar-expand-lg navbar-dark customer-nav sticky-top">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand d-flex align-items-center" href="{{ url_for('customer.dashboard') }}">
+      <span class="me-2 fs-5">⚡</span>
+      <span class="fw-semibold">GreenVolt</span>
+      <span class="badge badge-driver ms-2">EV DRIVER</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#customerNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="customerNav">
+      <ul class="navbar-nav ms-auto align-items-lg-center">
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'customer.dashboard' %}active{% endif %}"
+             href="{{ url_for('customer.dashboard') }}">Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'customer.stations' %}active{% endif %}"
+             href="{{ url_for('customer.stations') }}">Find Stations</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if 'vehicle' in request.endpoint %}active{% endif %}"
+             href="{{ url_for('customer.vehicles') }}">My Vehicles</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if 'session' in request.endpoint %}active{% endif %}"
+             href="{{ url_for('customer.sessions') }}">Charging History</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if 'payment' in request.endpoint %}active{% endif %}"
+             href="{{ url_for('customer.payments') }}">Bills & Invoices</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if 'profile' in request.endpoint %}active{% endif %}"
+             href="{{ url_for('customer.profile') }}">My Profile</a>
+        </li>
+
+        <li class="nav-item ms-lg-3 pt-2 pt-lg-0 border-top border-lg-0 border-secondary">
+          <span class="text-light small opacity-75 me-2 d-none d-lg-inline">👤 {{ session.get('user_name') }}</span>
+          <a class="btn btn-outline-light btn-sm py-1 px-2" href="{{ url_for('auth.logout') }}">Logout</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Main Content ───────────────────────────────────────────────────────── -->
+<main class="main-content">
+  <div class="container-fluid" style="max-width: 1200px;">
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show mt-2 shadow-sm" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+
+  </div>
+</main>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% block scripts %}{% endblock %}
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

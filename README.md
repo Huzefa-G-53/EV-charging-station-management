@@ -97,32 +97,52 @@ Open your browser and go to: **http://127.0.0.1:5000**
 
 ---
 
-## Admin Login
+## Portals & Authentication
 
-| Field    | Value           |
-|----------|-----------------|
-| Email    | admin@ev.com    |
-| Password | admin123        |
+The application features **two separate, role-separated portals** accessible from the unified login page:
+
+### 1. 🛡️ Admin & Operational Management Portal
+- **Login Credentials**: `admin@ev.com` / `password: admin123`
+- **Features**:
+  - Live Operational Dashboard & Analytics (Revenue, Expenses, Profit, Charger status)
+  - Charging Stations & Chargers management
+  - Charging Sessions oversight and Payment ledger
+  - Staff management & automated payroll expense tracking
+  - Preventive & Repair Maintenance logs
+  - Non-charging revenue (Ads, cafe, land lease collaborations)
+  - Financial & Operational Reports
+  - **Data Privacy Compliance**: Read-only Customer Directory & Vehicle Registry. Administrators cannot tamper with or modify customer personal profiles, credentials, or vehicles.
+
+### 2. ⚡ EV Driver / Customer Self-Service Portal
+- **Login Credentials**: e.g., `arjun@email.com` / `password: user123` (or click **"Create a customer account"**)
+- **Features**:
+  - **Driver Dashboard**: Live active charging monitor, vehicle summary, session counter, total kWh and expenses.
+  - **My EV Garage**: Add, edit, and delete personally owned electric vehicles (license plate, make, model, battery capacity).
+  - **Station Finder**: Browse network stations with real-time bay availability, power ratings, and tariffs.
+  - **Initiate & Stop Charging**: Select vehicle, connect to an available charger bay, monitor live session, and unplug with automated meter billing.
+  - **Invoices & Payments**: View billing breakdown, settle payments (UPI, Card, Net Banking, Wallet), and print official receipts.
+  - **Profile & Security**: Update personal contact info, change password, and permanent self-deletion ("Right to be Forgotten").
 
 ---
 
 ## Modules Available
 
-| Module         | URL Prefix        | Features                        |
-|----------------|-------------------|---------------------------------|
-| Dashboard      | /dashboard        | KPIs, 4 charts                  |
-| Users          | /users/           | CRUD + search                   |
-| Vehicles       | /vehicles/        | CRUD + search                   |
-| Stations       | /stations/        | CRUD + search                   |
-| Chargers       | /chargers/        | CRUD + station filter           |
-| Sessions       | /sessions/        | CRUD + status filter            |
-| Payments       | /payments/        | CRUD + status filter            |
-| Staff          | /staff/           | CRUD + station filter           |
-| Maintenance    | /maintenance/     | CRUD + status filter            |
-| Expenses       | /expenses/        | CRUD + type & station filter    |
-| Revenue        | /revenue/         | CRUD + source & station filter  |
-| Collaborations | /collaborations/  | CRUD + status & station filter  |
-| Reports        | /reports/         | Financial + operational reports |
+| Module | URL Prefix | Target Role | Key Features |
+|---|---|---|---|
+| Admin Dashboard | /dashboard | Admin | KPIs, 4 interactive charts |
+| Customer Directory | /users/ | Admin | Read-only profile overview + status toggle |
+| Vehicle Registry | /vehicles/ | Admin | On-site plate lookup & walk-in entry |
+| Stations & Chargers | /stations/, /chargers/ | Admin | Network infrastructure & pricing |
+| Sessions & Payments | /sessions/, /payments/ | Admin | Operations ledger & audit logs |
+| Staff & Maintenance | /staff/, /maintenance/ | Admin | Personnel & charger maintenance |
+| Financials | /expenses/, /revenue/, /collaborations/ | Admin | Comprehensive balance sheet |
+| Reports | /reports/ | Admin | Station-wise performance & analytics |
+| Driver Dashboard | /customer/dashboard | Customer | Driver overview & live charge tracker |
+| My Garage | /customer/vehicles | Customer | Personal vehicle fleet management |
+| Station Finder | /customer/stations | Customer | Real-time bay availability & tariffs |
+| Charging Operations | /customer/sessions | Customer | Initiate/Stop charging sessions |
+| Billing & Receipts | /customer/payments | Customer | Pay pending bills & print receipts |
+| Profile & Privacy | /customer/profile | Customer | Self-service edit, password change, account deletion |
 
 ---
 

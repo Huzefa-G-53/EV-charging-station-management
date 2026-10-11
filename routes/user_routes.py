@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from werkzeug.security import generate_password_hash
-from routes.auth_routes import login_required
+from routes.auth_routes import admin_required
 from database.db_connection import execute_query
 import mysql.connector
 
@@ -8,105 +8,125 @@ users_bp = Blueprint('users', __name__, url_prefix='/users')
 
 
 @users_bp.route('/')
-@login_required
+@admin_required
 def list_users():
     search = request.args.get('search', '').strip()
     if search:
         users = execute_query(
-            'SELECT * FROM user WHERE full_name LIKE %s OR email LIKE %s OR phone LIKE %s ORDER BY user_id',
+            '''SELECT u.user_id, u.full_name, u.phone, u.email, u.account_status, u.created_at,
+                      (SELECT COUNT(*) FROM vehicle v WHERE v.user_id = u.user_id) AS vehicle_count,
+                      (SELECT COUNT(*) FROM charging_session cs WHERE cs.user_id = u.user_id) AS session_count
+               FROM user u
+               WHERE u.full_name LIKE %s OR u.email LIKE %s OR u.phone LIKE %s
+               ORDER BY u.user_id''',
             (f'%{search}%', f'%{search}%', f'%{search}%'), fetch=True
         )
     else:
-        users = execute_query('SELECT * FROM user ORDER BY user_id', fetch=True)
+        users = execute_query(
+            '''SELECT u.user_id, u.full_name, u.phone, u.email, u.account_status, u.created_at,
+                      (SELECT COUNT(*) FROM vehicle v WHERE v.user_id = u.user_id) AS vehicle_count,
+                      (SELECT COUNT(*) FROM charging_session cs WHERE cs.user_id = u.user_id) AS session_count
+               FROM user u
+               ORDER BY u.user_id''',
+            fetch=True
+        )
     return render_template('users_list.html', users=users, search=search)
 
 
 @users_bp.route('/add', methods=['GET', 'POST'])
-@login_required
+@admin_required
 def add_user():
+    """Admin can register an on-site walk-in customer."""
     if request.method == 'POST':
-        full_name  = request.form.get('full_name', '').strip()
-        phone      = request.form.get('phone', '').strip()
-        email      = request.form.get('email', '').strip()
-        password   = request.form.get('password', '')
-        address    = request.form.get('address', '').strip()
-        status     = request.form.get('account_status', 'Active')
+        full_name = request.form.get('full_name', '').strip()
+        phone = request.form.get('phone', '').strip()
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '')
+        address = request.form.get('address', '').strip()
 
         if not all([full_name, phone, email, password]):
-            flash('Full name, phone, email, and password are required.', 'danger')
+            flash('Full name, phone, email, and initial password are required.', 'danger')
             return render_template('users_form.html', user=None)
 
         password_hash = generate_password_hash(password)
         try:
             execute_query(
                 '''INSERT INTO user (full_name, phone, email, password_hash, address, account_status)
-                   VALUES (%s, %s, %s, %s, %s, %s)''',
-                (full_name, phone, email, password_hash, address, status)
+                   VALUES (%s, %s, %s, %s, %s, 'Active')''',
+                (full_name, phone, email, password_hash, address)
             )
-            flash('User added successfully.', 'success')
+            flash('Customer registered successfully.', 'success')
             return redirect(url_for('users.list_users'))
         except mysql.connector.IntegrityError:
-            flash('Email already exists. Please use a different email.', 'danger')
+            flash('Email already registered for another customer.', 'danger')
+        except Exception:
+            flash('Error creating customer record.', 'danger')
 
     return render_template('users_form.html', user=None)
 
 
-@users_bp.route('/<int:user_id>/edit', methods=['GET', 'POST'])
-@login_required
-def edit_user(user_id):
-    user = execute_query('SELECT * FROM user WHERE user_id = %s', (user_id,), fetchone=True)
+@users_bp.route('/<int:user_id>/view')
+@admin_required
+def view_user(user_id):
+    """
+    Read-only operational profile view for Admin.
+    Admin CANNOT edit customer personal details or passwords.
+    """
+    user = execute_query(
+        '''SELECT user_id, full_name, phone, email, account_status, created_at, address
+           FROM user WHERE user_id = %s''',
+        (user_id,), fetchone=True
+    )
     if not user:
-        flash('User not found.', 'danger')
+        flash('Customer not found.', 'danger')
         return redirect(url_for('users.list_users'))
 
-    if request.method == 'POST':
-        full_name = request.form.get('full_name', '').strip()
-        phone     = request.form.get('phone', '').strip()
-        email     = request.form.get('email', '').strip()
-        address   = request.form.get('address', '').strip()
-        status    = request.form.get('account_status', 'Active')
-        password  = request.form.get('password', '').strip()
+    vehicles = execute_query(
+        'SELECT * FROM vehicle WHERE user_id = %s ORDER BY vehicle_id',
+        (user_id,), fetch=True
+    )
+    recent_sessions = execute_query(
+        '''SELECT cs.*, c.charger_type, st.station_name, v.vehicle_number
+           FROM charging_session cs
+           JOIN charger c ON cs.charger_id = c.charger_id
+           JOIN charging_station st ON c.station_id = st.station_id
+           JOIN vehicle v ON cs.vehicle_id = v.vehicle_id
+           WHERE cs.user_id = %s
+           ORDER BY cs.session_id DESC LIMIT 5''',
+        (user_id,), fetch=True
+    )
 
-        if not all([full_name, phone, email]):
-            flash('Full name, phone, and email are required.', 'danger')
-            return render_template('users_form.html', user=user)
+    return render_template(
+        'users_view.html',
+        user=user,
+        vehicles=vehicles,
+        recent_sessions=recent_sessions
+    )
 
-        if password:
-            password_hash = generate_password_hash(password)
-            try:
-                execute_query(
-                    '''UPDATE user SET full_name=%s, phone=%s, email=%s, password_hash=%s,
-                       address=%s, account_status=%s WHERE user_id=%s''',
-                    (full_name, phone, email, password_hash, address, status, user_id)
-                )
-            except mysql.connector.IntegrityError:
-                flash('Email already exists.', 'danger')
-                return render_template('users_form.html', user=user)
-        else:
-            try:
-                execute_query(
-                    '''UPDATE user SET full_name=%s, phone=%s, email=%s,
-                       address=%s, account_status=%s WHERE user_id=%s''',
-                    (full_name, phone, email, address, status, user_id)
-                )
-            except mysql.connector.IntegrityError:
-                flash('Email already exists.', 'danger')
-                return render_template('users_form.html', user=user)
 
-        flash('User updated successfully.', 'success')
+@users_bp.route('/<int:user_id>/toggle-status', methods=['POST'])
+@admin_required
+def toggle_status(user_id):
+    """Admin moderation: Suspend or activate an account without altering private data."""
+    user = execute_query('SELECT user_id, account_status FROM user WHERE user_id = %s', (user_id,), fetchone=True)
+    if not user:
+        flash('Customer not found.', 'danger')
         return redirect(url_for('users.list_users'))
 
-    return render_template('users_form.html', user=user)
+    new_status = 'Suspended' if user['account_status'] == 'Active' else 'Active'
+    execute_query('UPDATE user SET account_status = %s WHERE user_id = %s', (new_status, user_id))
+    flash(f'Customer account status updated to {new_status}.', 'success')
+    return redirect(url_for('users.list_users'))
 
 
 @users_bp.route('/<int:user_id>/delete', methods=['POST'])
-@login_required
+@admin_required
 def delete_user(user_id):
     try:
         execute_query('DELETE FROM user WHERE user_id = %s', (user_id,))
-        flash('User deleted successfully.', 'success')
+        flash('Customer record removed.', 'success')
     except mysql.connector.IntegrityError:
-        flash('Cannot delete: this user has associated vehicles or sessions. Remove them first.', 'danger')
-    except Exception as e:
-        flash(f'Error: {str(e)}', 'danger')
+        flash('Cannot delete: customer has active or associated charging sessions.', 'danger')
+    except Exception:
+        flash('Unable to delete customer account.', 'danger')
     return redirect(url_for('users.list_users'))
