@@ -89,11 +89,21 @@ def edit_staff(staff_id):
 @staff_bp.route('/<int:staff_id>/delete', methods=['POST'])
 @login_required
 def delete_staff(staff_id):
+    staff_member = execute_query('SELECT full_name, role FROM staff WHERE staff_id = %s', (staff_id,), fetchone=True)
+    if not staff_member:
+        flash('Staff member not found.', 'danger')
+        return redirect(url_for('staff.list_staff'))
+
+    reason = request.form.get('deletion_reason', '').strip()
+    if not reason:
+        flash('A mandatory offboarding/deletion reason must be provided to delete an employee.', 'danger')
+        return redirect(url_for('staff.list_staff'))
+
     try:
         execute_query('DELETE FROM staff WHERE staff_id = %s', (staff_id,))
-        flash('Staff member deleted successfully.', 'success')
+        flash(f"Staff member {staff_member['full_name']} ({staff_member['role']}) offboarded. Reason: {reason}", 'success')
     except mysql.connector.IntegrityError:
-        flash('Cannot delete: this staff member has associated maintenance records.', 'danger')
-    except Exception as e:
-        flash(f'Error: {str(e)}', 'danger')
+        flash('Cannot delete: this staff member is assigned to historical maintenance logs. Please reassign those records first.', 'danger')
+    except Exception:
+        flash('Error removing staff member.', 'danger')
     return redirect(url_for('staff.list_staff'))

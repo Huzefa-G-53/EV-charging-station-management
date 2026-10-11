@@ -13,7 +13,7 @@ def list_users():
     search = request.args.get('search', '').strip()
     if search:
         users = execute_query(
-            '''SELECT u.user_id, u.full_name, u.phone, u.email, u.account_status, u.created_at,
+            '''SELECT u.user_id, u.full_name, u.phone, u.email, u.account_status, u.suspension_reason, u.created_at,
                       (SELECT COUNT(*) FROM vehicle v WHERE v.user_id = u.user_id) AS vehicle_count,
                       (SELECT COUNT(*) FROM charging_session cs WHERE cs.user_id = u.user_id) AS session_count
                FROM user u
@@ -23,7 +23,7 @@ def list_users():
         )
     else:
         users = execute_query(
-            '''SELECT u.user_id, u.full_name, u.phone, u.email, u.account_status, u.created_at,
+            '''SELECT u.user_id, u.full_name, u.phone, u.email, u.account_status, u.suspension_reason, u.created_at,
                       (SELECT COUNT(*) FROM vehicle v WHERE v.user_id = u.user_id) AS vehicle_count,
                       (SELECT COUNT(*) FROM charging_session cs WHERE cs.user_id = u.user_id) AS session_count
                FROM user u
@@ -39,10 +39,10 @@ def add_user():
     """Admin can register an on-site walk-in customer."""
     if request.method == 'POST':
         full_name = request.form.get('full_name', '').strip()
-        phone = request.form.get('phone', '').strip()
-        email = request.form.get('email', '').strip()
-        password = request.form.get('password', '')
-        address = request.form.get('address', '').strip()
+        phone     = request.form.get('phone', '').strip()
+        email     = request.form.get('email', '').strip()
+        password  = request.form.get('password', '')
+        address   = request.form.get('address', '').strip()
 
         if not all([full_name, phone, email, password]):
             flash('Full name, phone, email, and initial password are required.', 'danger')
@@ -70,10 +70,10 @@ def add_user():
 def view_user(user_id):
     """
     Read-only operational profile view for Admin.
-    Admin CANNOT edit customer personal details or passwords.
+    Admin CANNOT edit customer personal details or passwords, and CANNOT delete customers.
     """
     user = execute_query(
-        '''SELECT user_id, full_name, phone, email, account_status, created_at, address
+        '''SELECT user_id, full_name, phone, email, account_status, suspension_reason, created_at, address
            FROM user WHERE user_id = %s''',
         (user_id,), fetchone=True
     )
@@ -107,26 +107,28 @@ def view_user(user_id):
 @users_bp.route('/<int:user_id>/toggle-status', methods=['POST'])
 @admin_required
 def toggle_status(user_id):
-    """Admin moderation: Suspend or activate an account without altering private data."""
-    user = execute_query('SELECT user_id, account_status FROM user WHERE user_id = %s', (user_id,), fetchone=True)
+    """Admin moderation: Suspend (requires mandatory reason) or activate an account."""
+    user = execute_query('SELECT user_id, full_name, account_status FROM user WHERE user_id = %s', (user_id,), fetchone=True)
     if not user:
         flash('Customer not found.', 'danger')
         return redirect(url_for('users.list_users'))
 
-    new_status = 'Suspended' if user['account_status'] == 'Active' else 'Active'
-    execute_query('UPDATE user SET account_status = %s WHERE user_id = %s', (new_status, user_id))
-    flash(f'Customer account status updated to {new_status}.', 'success')
-    return redirect(url_for('users.list_users'))
+    if user['account_status'] == 'Active':
+        reason = request.form.get('suspension_reason', '').strip()
+        if not reason:
+            flash('A mandatory reason is required to suspend a customer account.', 'danger')
+            return redirect(url_for('users.list_users'))
 
+        execute_query(
+            'UPDATE user SET account_status = %s, suspension_reason = %s WHERE user_id = %s',
+            ('Suspended', reason, user_id)
+        )
+        flash(f"Account for {user['full_name']} has been suspended. Reason: {reason}", 'warning')
+    else:
+        execute_query(
+            'UPDATE user SET account_status = %s, suspension_reason = NULL WHERE user_id = %s',
+            ('Active', user_id)
+        )
+        flash(f"Account for {user['full_name']} has been reactivated.", 'success')
 
-@users_bp.route('/<int:user_id>/delete', methods=['POST'])
-@admin_required
-def delete_user(user_id):
-    try:
-        execute_query('DELETE FROM user WHERE user_id = %s', (user_id,))
-        flash('Customer record removed.', 'success')
-    except mysql.connector.IntegrityError:
-        flash('Cannot delete: customer has active or associated charging sessions.', 'danger')
-    except Exception:
-        flash('Unable to delete customer account.', 'danger')
     return redirect(url_for('users.list_users'))

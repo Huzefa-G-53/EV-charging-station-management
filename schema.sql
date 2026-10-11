@@ -23,14 +23,15 @@ CREATE TABLE IF NOT EXISTS admin (
 -- Stores registered EV users
 -- ============================================================
 CREATE TABLE IF NOT EXISTS user (
-    user_id        INT AUTO_INCREMENT PRIMARY KEY,
-    full_name      VARCHAR(100) NOT NULL,
-    phone          VARCHAR(20)  NOT NULL,
-    email          VARCHAR(100) NOT NULL UNIQUE,
-    password_hash  VARCHAR(255) NOT NULL,
-    address        TEXT,
-    account_status ENUM('Active', 'Inactive', 'Suspended') NOT NULL DEFAULT 'Active',
-    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    user_id           INT AUTO_INCREMENT PRIMARY KEY,
+    full_name         VARCHAR(100) NOT NULL,
+    phone             VARCHAR(20)  NOT NULL,
+    email             VARCHAR(100) NOT NULL UNIQUE,
+    password_hash     VARCHAR(255) NOT NULL,
+    address           TEXT,
+    account_status    ENUM('Active', 'Inactive', 'Suspended') NOT NULL DEFAULT 'Active',
+    suspension_reason VARCHAR(255) NULL,
+    created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ============================================================

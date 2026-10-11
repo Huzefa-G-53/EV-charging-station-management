@@ -43,6 +43,9 @@
                 <span class="badge bg-success">Active</span>
               {% elif user.account_status == 'Suspended' %}
                 <span class="badge bg-danger">Suspended</span>
+                {% if user.suspension_reason %}
+                  <div class="small text-danger mt-1 fst-italic">Reason: {{ user.suspension_reason }}</div>
+                {% endif %}
               {% else %}
                 <span class="badge bg-secondary">Inactive</span>
               {% endif %}

@@ -49,10 +49,37 @@
         <td>₹{{ "%.2f"|format(s.salary) }}</td>
         <td>
           <a href="{{ url_for('staff.edit_staff', staff_id=s.staff_id) }}" class="btn btn-outline-secondary btn-sm">Edit</a>
-          <form action="{{ url_for('staff.delete_staff', staff_id=s.staff_id) }}" method="post"
-                style="display:inline;" onsubmit="return confirmDelete()">
-            <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
-          </form>
+          <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteStaffModal{{ s.staff_id }}">
+            Delete
+          </button>
+
+          <!-- Offboard/Delete Employee Confirmation Modal -->
+          <div class="modal fade text-start" id="deleteStaffModal{{ s.staff_id }}" tabindex="-1">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <form action="{{ url_for('staff.delete_staff', staff_id=s.staff_id) }}" method="post">
+                  <div class="modal-header bg-light py-2">
+                    <h6 class="modal-title fw-bold text-dark">Offboard Employee: {{ s.full_name }}</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body">
+                    <p class="small text-secondary mb-3">
+                      You are about to remove <strong>{{ s.full_name }}</strong> ({{ s.role }} at {{ s.station_name }}). A formal reason is mandatory for human resources and station compliance.
+                    </p>
+                    <div class="mb-3">
+                      <label class="form-label small fw-semibold">Mandatory Offboarding Reason *</label>
+                      <textarea class="form-control form-control-sm" name="deletion_reason" rows="3"
+                                placeholder="Enter specific reason (e.g. Voluntary resignation, contract expired, transferred, performance dismissal)..." required></textarea>
+                    </div>
+                  </div>
+                  <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger btn-sm">Confirm & Delete Employee</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
         </td>
       </tr>
       {% else %}
