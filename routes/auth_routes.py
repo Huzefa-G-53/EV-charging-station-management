@@ -27,13 +27,13 @@ def customer_required(f):
             flash('Customer login required. Please log in to your account.', 'warning')
             return redirect(url_for('auth.login'))
 
-        # Live verification from database to ensure account hasn't been suspended mid-session
+        # Live verification from database to ensure account is Active
         status_check = execute_query(
             'SELECT account_status, suspension_reason FROM user WHERE user_id = %s',
             (session['user_id'],), fetchone=True
         )
-        if not status_check or status_check['account_status'] == 'Suspended':
-            reason = (status_check and status_check.get('suspension_reason')) or 'Account suspended by management.'
+        if not status_check or status_check['account_status'] != 'Active':
+            reason = (status_check and status_check.get('suspension_reason')) or 'Account inactive or suspended.'
             session.clear()
             flash(f'Your account access has been revoked: {reason}. Please contact support.', 'danger')
             return redirect(url_for('auth.login'))
@@ -93,6 +93,9 @@ def login():
             if user['account_status'] == 'Suspended':
                 reason = user.get('suspension_reason') or 'Policy violation.'
                 flash(f'Your account has been suspended: {reason}. Please contact customer support.', 'danger')
+                return render_template('login.html')
+            elif user['account_status'] == 'Inactive':
+                flash('This driver account has been closed/deactivated. Please register a new account to continue.', 'warning')
                 return render_template('login.html')
 
             session.clear()

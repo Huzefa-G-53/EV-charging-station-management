@@ -443,12 +443,24 @@ def delete_account():
         flash('Cannot delete account while you have an active charging session.', 'danger')
         return redirect(url_for('customer.profile'))
 
-    # Execute deletion
+    # Option 1: Soft Account Closure (Preserves authentic name on past invoices for tax/audit compliance)
     try:
-        execute_query('DELETE FROM user WHERE user_id = %s', (user_id,))
+        # 1. Remove registered vehicles from garage
+        execute_query('DELETE FROM vehicle WHERE user_id = %s', (user_id,))
+
+        # 2. Deactivate account, wipe credentials, keep authentic name on past billing records
+        execute_query(
+            '''UPDATE user 
+               SET account_status = 'Inactive',
+                   suspension_reason = 'Account closed by driver',
+                   password_hash = 'ACCOUNT_CLOSED'
+               WHERE user_id = %s''',
+            (user_id,)
+        )
+
         session.clear()
-        flash('Your account and associated profile data have been permanently removed.', 'info')
+        flash('Your account has been closed and deactivated. Past invoices remain preserved for billing compliance.', 'info')
         return redirect(url_for('auth.login'))
     except Exception:
-        flash('Unable to delete account due to existing financial audit records. Please contact station management.', 'danger')
+        flash('Unable to process account deactivation at this time. Please contact support.', 'danger')
         return redirect(url_for('customer.profile'))

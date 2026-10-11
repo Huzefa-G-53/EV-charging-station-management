@@ -248,6 +248,24 @@ BEGIN
         END IF;
     END IF;
 END; //
+
+DROP TRIGGER IF EXISTS trg_payment_update_revenue;
+CREATE TRIGGER trg_payment_update_revenue
+AFTER UPDATE ON payment
+FOR EACH ROW
+BEGIN
+    DECLARE st_id INT;
+    IF OLD.payment_status != 'Completed' AND NEW.payment_status = 'Completed' AND NEW.amount > 0 THEN
+        SELECT c.station_id INTO st_id
+        FROM charging_session cs
+        JOIN charger c ON cs.charger_id = c.charger_id
+        WHERE cs.session_id = NEW.session_id;
+        IF st_id IS NOT NULL THEN
+            INSERT INTO revenue (station_id, revenue_date, amount, source, description)
+            VALUES (st_id, NEW.payment_date, NEW.amount, 'Charging Session', CONCAT('Payment received for Charging Session #', NEW.session_id));
+        END IF;
+    END IF;
+END; //
 DELIMITER ;
 
 -- 4. Auto-log Collaboration to Revenue
