@@ -63,37 +63,49 @@ cd ev-charging-management
 pip install -r requirements.txt
 ```
 
-### Step 2 — Create the MySQL Database & Schema
+### Step 2 — Configure Database Password (`config.py`)
 
-Open **MySQL Workbench** or run from terminal:
+Open `config.py` and set `DB_PASSWORD` to your own local MySQL root password:
 
-```bash
-mysql -u root -p < schema.sql
+```python
+class Config:
+    DB_HOST     = 'localhost'
+    DB_USER     = 'root'
+    DB_PASSWORD = 'YOUR_MYSQL_PASSWORD'  # <-- Change this to your password!
+    DB_NAME     = 'ev_charging_db'
 ```
 
-### Step 3 — Load Sample Data
+### Step 3 — Create Schema & Load Seed Data
 
-```bash
-mysql -u root -p < seed.sql
+**Option A (Using MySQL Workbench):**
+1. Open MySQL Workbench and connect to your local instance.
+2. Open and execute `schema.sql` (Click the lightning bolt ⚡ to run all).
+3. Open and execute `seed.sql`.
+
+**Option B (Using Windows PowerShell / Terminal):**
+```powershell
+Get-Content schema.sql | mysql -u root -p
+Get-Content seed.sql | mysql -u root -p
 ```
+*(On Mac/Linux: `mysql -u root -p < schema.sql`)*
 
-### Step 4 — Create the Admin Account
+### Step 4 — Create Admin Account
 
 ```bash
 python create_admin.py
 ```
 
-This creates the admin login:
+This creates the default administrator login:
 - **Email**: `admin@ev.com`
 - **Password**: `admin123`
 
-### Step 5 — Run the Application
+### Step 5 — Start the Application
 
 ```bash
 python app.py
 ```
 
-Open your browser and go to: **http://127.0.0.1:5000**
+Open your browser and navigate to: **http://127.0.0.1:5000**
 
 ---
 
