@@ -9,10 +9,38 @@
   <a href="{{ url_for('chargers.add_charger') }}" class="btn btn-primary btn-sm">+ Add Charger</a>
 </div>
 
+<!-- Visual Availability Summary & Distribution Bar -->
+<div class="row g-2 mb-3">
+  <div class="col-md-3 col-6">
+    <div class="card border p-2 text-center">
+      <div class="fw-bold fs-5 text-dark">{{ stats.total }}</div>
+      <div class="text-muted small">Total Chargers</div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card border p-2 text-center">
+      <div class="fw-bold fs-5 text-success">{{ stats.available }}</div>
+      <div class="text-muted small">Available Bays</div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card border p-2 text-center">
+      <div class="fw-bold fs-5 text-warning">{{ stats.in_use }}</div>
+      <div class="text-muted small">In Use (Active)</div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card border p-2 text-center">
+      <div class="fw-bold fs-5 text-danger">{{ stats.maintenance }}</div>
+      <div class="text-muted small">Under Maintenance</div>
+    </div>
+  </div>
+</div>
+
 <!-- Filter by Station -->
 <form method="get" class="mb-3">
   <div class="d-flex gap-2 align-items-center flex-wrap">
-    <select class="form-select form-select-sm" name="station_id" style="max-width:260px;" onchange="this.form.submit()">
+    <select class="form-select form-select-sm w-auto" name="station_id" onchange="this.form.submit()">
       <option value="">All Stations</option>
       {% for st in stations %}
       <option value="{{ st.station_id }}" {% if station_filter|string == st.station_id|string %}selected{% endif %}>{{ st.station_name }}</option>
@@ -52,7 +80,7 @@
         <td>
           <a href="{{ url_for('chargers.edit_charger', charger_id=c.charger_id) }}" class="btn btn-outline-secondary btn-sm">Edit</a>
           <form action="{{ url_for('chargers.delete_charger', charger_id=c.charger_id) }}" method="post"
-                style="display:inline;" onsubmit="return confirmDelete()">
+                class="d-inline" onsubmit="return confirmDelete()">
             <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
           </form>
         </td>

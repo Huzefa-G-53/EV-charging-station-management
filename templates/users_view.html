@@ -54,43 +54,14 @@
         </table>
 
         <div class="alert alert-info py-2 px-3 mt-3 mb-0 small">
-          ℹ️ <strong>Privacy Protection:</strong> Customer personal profile data (address, credentials) cannot be modified by administrators. Only the customer can update their personal information through their self-service portal.
+          ℹ️ <strong>Privacy Protection:</strong> Customer personal profile data (address, credentials, vehicle details) cannot be viewed or modified by administrators. Only the customer can manage their information through their self-service portal.
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Registered Vehicles -->
+  <!-- Recent Charging Activity -->
   <div class="col-md-7">
-    <div class="card border mb-3">
-      <div class="card-header bg-light py-2 fw-semibold">Registered Vehicles ({{ vehicles|length }})</div>
-      <div class="card-body p-0">
-        <table class="table table-sm table-hover mb-0">
-          <thead>
-            <tr>
-              <th>Plate No.</th>
-              <th>Make & Model</th>
-              <th>Type</th>
-              <th>Battery</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for v in vehicles %}
-            <tr>
-              <td class="fw-semibold">{{ v.vehicle_number }}</td>
-              <td>{{ v.brand }} {{ v.model }}</td>
-              <td>{{ v.vehicle_type }}</td>
-              <td>{{ v.battery_capacity }} kWh</td>
-            </tr>
-            {% else %}
-            <tr><td colspan="4" class="text-center text-muted py-3">No registered vehicles.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Recent Sessions -->
     <div class="card border">
       <div class="card-header bg-light py-2 fw-semibold">Recent Charging Activity</div>
       <div class="card-body p-0">
@@ -99,7 +70,6 @@
             <tr>
               <th>Session</th>
               <th>Station / Charger</th>
-              <th>Vehicle</th>
               <th>Status</th>
               <th>Amount</th>
             </tr>
@@ -109,7 +79,6 @@
             <tr>
               <td>#{{ s.session_id }}</td>
               <td>{{ s.station_name }} ({{ s.charger_type }})</td>
-              <td>{{ s.vehicle_number }}</td>
               <td>
                 <span class="badge {% if s.status == 'Completed' %}bg-success{% elif s.status == 'Active' %}bg-primary{% else %}bg-secondary{% endif %}">
                   {{ s.status }}
@@ -118,7 +87,7 @@
               <td>{{ '₹%.2f'|format(s.total_amount) if s.total_amount else '—' }}</td>
             </tr>
             {% else %}
-            <tr><td colspan="5" class="text-center text-muted py-3">No charging history.</td></tr>
+            <tr><td colspan="4" class="text-center text-muted py-3">No charging history.</td></tr>
             {% endfor %}
           </tbody>
         </table>

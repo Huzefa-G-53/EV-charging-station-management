@@ -45,7 +45,7 @@ def dashboard():
         (user_id,), fetchone=True
     )
 
-    # Recent completed sessions
+    # Recent completed sessions for table
     recent_sessions = execute_query(
         '''SELECT cs.*, c.charger_type, st.station_name, v.vehicle_number, p.payment_status
            FROM charging_session cs
@@ -58,13 +58,58 @@ def dashboard():
         (user_id,), fetch=True
     )
 
+    # Driver session history for trend chart (chronological)
+    trend_data = execute_query(
+        '''SELECT cs.session_id, cs.start_time,
+                  COALESCE(cs.energy_consumed, 0) AS kwh,
+                  COALESCE(cs.total_amount, 0) AS amount
+           FROM charging_session cs
+           WHERE cs.user_id = %s AND cs.status = 'Completed'
+           ORDER BY cs.start_time ASC
+           LIMIT 8''',
+        (user_id,), fetch=True
+    )
+
+    # Station visits breakdown
+    station_visits = execute_query(
+        '''SELECT st.station_name, COUNT(*) AS visits
+           FROM charging_session cs
+           JOIN charger c ON cs.charger_id = c.charger_id
+           JOIN charging_station st ON c.station_id = st.station_id
+           WHERE cs.user_id = %s
+           GROUP BY st.station_id, st.station_name
+           ORDER BY visits DESC''',
+        (user_id,), fetch=True
+    )
+
+    # Eco impact calculations (1 kWh = ~0.82 kg CO2 offset)
+    total_kwh = float(stats['total_kwh'] or 0)
+    co2_saved = round(total_kwh * 0.82, 1)
+    trees_equiv = round(co2_saved / 21.0, 1) if co2_saved > 0 else 0
+
+    import json
+    driver_chart_payload = {
+        'trend': {
+            'labels': [t['start_time'].strftime('%d %b') if t['start_time'] else f'#{t["session_id"]}' for t in trend_data],
+            'kwh': [float(t['kwh']) for t in trend_data],
+            'amount': [float(t['amount']) for t in trend_data]
+        },
+        'stations': {
+            'labels': [s['station_name'].replace(' EV Station', '').replace(' Charging Hub', '').replace(' Charging Station', '') for s in station_visits],
+            'values': [int(s['visits']) for s in station_visits]
+        }
+    }
+
     return render_template(
         'customer/dashboard.html',
         user=user,
         vehicles=vehicles,
         active_session=active_session,
         stats=stats,
-        recent_sessions=recent_sessions
+        recent_sessions=recent_sessions,
+        co2_saved=co2_saved,
+        trees_equiv=trees_equiv,
+        driver_chart_payload_json=json.dumps(driver_chart_payload)
     )
 
 

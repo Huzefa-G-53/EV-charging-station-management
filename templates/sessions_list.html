@@ -9,6 +9,34 @@
   <a href="{{ url_for('sessions.add_session') }}" class="btn btn-primary btn-sm">+ New Session</a>
 </div>
 
+<!-- Visual Sessions KPI Bar -->
+<div class="row g-2 mb-3">
+  <div class="col-md-3 col-6">
+    <div class="card border p-2 text-center">
+      <div class="fw-bold fs-5 text-dark">{{ stats.total }}</div>
+      <div class="text-muted small">Total Sessions</div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card border p-2 text-center">
+      <div class="fw-bold fs-5 text-primary">{{ stats.active }}</div>
+      <div class="text-muted small">Active In-Progress</div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card border p-2 text-center">
+      <div class="fw-bold fs-5 text-success">{{ '%.1f'|format(stats.total_kwh) }} kWh</div>
+      <div class="text-muted small">Energy Dispensed</div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card border p-2 text-center">
+      <div class="fw-bold fs-5 text-success">₹{{ '%.0f'|format(stats.total_amount) }}</div>
+      <div class="text-muted small">Total Session Billed</div>
+    </div>
+  </div>
+</div>
+
 <form method="get" class="mb-3">
   <div class="d-flex gap-2 flex-wrap">
     <select class="form-select form-select-sm" name="status" style="max-width:180px;" onchange="this.form.submit()">

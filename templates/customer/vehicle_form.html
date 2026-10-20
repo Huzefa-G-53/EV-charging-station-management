@@ -40,15 +40,15 @@
     <div class="row g-2 mb-4">
       <div class="col-md-6">
         <label for="brand" class="form-label">Manufacturer / Brand *</label>
-        <input type="text" class="form-control" id="brand" name="brand"
-               placeholder="e.g. Tata, MG, Hyundai, Tesla"
-               value="{{ vehicle.brand if vehicle else '' }}" required>
+        <select class="form-select" id="brand" name="brand" required>
+          <option value="">Select brand…</option>
+        </select>
       </div>
       <div class="col-md-6">
         <label for="model" class="form-label">Model Name *</label>
-        <input type="text" class="form-control" id="model" name="model"
-               placeholder="e.g. Nexon EV, ZS EV, Ioniq 5"
-               value="{{ vehicle.model if vehicle else '' }}" required>
+        <select class="form-select" id="model" name="model" required>
+          <option value="">Select model…</option>
+        </select>
       </div>
     </div>
 
@@ -60,4 +60,66 @@
     </div>
   </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // ── Hardcoded EV Brand-Model Data (Popular Indian + Global EVs) ──────────
+  const EV_CATALOG = {
+    'Tata': ['Nexon EV Max', 'Nexon EV Prime', 'Tiago EV', 'Punch EV', 'Curvv EV', 'Sierra EV'],
+    'MG': ['ZS EV', 'Comet EV', 'Windsor EV'],
+    'Hyundai': ['Ioniq 5', 'Kona Electric', 'Creta EV'],
+    'Mahindra': ['XEV 9e', 'BE 6', 'e2o Plus', 'eXUV300'],
+    'BYD': ['Atto 3', 'Seal', 'e6'],
+    'Kia': ['EV6', 'EV9'],
+    'Mercedes-Benz': ['EQS', 'EQB', 'EQA'],
+    'BMW': ['iX', 'i4', 'i7', 'iX1'],
+    'Audi': ['e-tron', 'e-tron GT', 'Q8 e-tron'],
+    'Volvo': ['XC40 Recharge', 'C40 Recharge'],
+    'Tesla': ['Model 3', 'Model Y', 'Model S', 'Model X'],
+    'Ola Electric': ['S1 Pro', 'S1 Air', 'S1 X'],
+    'Ather': ['450X', '450S', 'Rizta'],
+    'TVS': ['iQube', 'iQube ST'],
+    'Bajaj': ['Chetak Electric'],
+    'Citroen': ['eC3'],
+    'Porsche': ['Taycan', 'Taycan Cross Turismo'],
+    'Jaguar': ['I-Pace']
+  };
+
+  const brandSelect = document.getElementById('brand');
+  const modelSelect = document.getElementById('model');
+
+  // Pre-selected values for edit mode
+  const preselectedBrand = '{{ vehicle.brand if vehicle else "" }}';
+  const preselectedModel = '{{ vehicle.model if vehicle else "" }}';
+
+  // Populate brands
+  Object.keys(EV_CATALOG).sort().forEach(brand => {
+    const opt = document.createElement('option');
+    opt.value = brand;
+    opt.textContent = brand;
+    if (brand === preselectedBrand) opt.selected = true;
+    brandSelect.appendChild(opt);
+  });
+
+  // Populate models based on brand
+  function populateModels(brand) {
+    modelSelect.innerHTML = '<option value="">Select model…</option>';
+    if (brand && EV_CATALOG[brand]) {
+      EV_CATALOG[brand].forEach(model => {
+        const opt = document.createElement('option');
+        opt.value = model;
+        opt.textContent = model;
+        if (model === preselectedModel) opt.selected = true;
+        modelSelect.appendChild(opt);
+      });
+    }
+  }
+
+  // Event: brand changes → update models
+  brandSelect.addEventListener('change', () => populateModels(brandSelect.value));
+
+  // Initial load for edit mode
+  if (preselectedBrand) populateModels(preselectedBrand);
+</script>
 {% endblock %}

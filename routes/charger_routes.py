@@ -26,7 +26,31 @@ def list_chargers():
                ORDER BY c.charger_id''',
             fetch=True
         )
-    return render_template('chargers_list.html', chargers=chargers, stations=stations, station_filter=station_filter)
+    total_c = len(chargers)
+    avail_c = sum(1 for c in chargers if c.get('status') == 'Available')
+    in_use_c = sum(1 for c in chargers if c.get('status') == 'In Use')
+    maint_c = sum(1 for c in chargers if c.get('status') == 'Under Maintenance')
+    inactive_c = max(0, total_c - avail_c - in_use_c - maint_c)
+
+    fleet_stats = {
+        'total': total_c,
+        'available': avail_c,
+        'in_use': in_use_c,
+        'maintenance': maint_c,
+        'inactive': inactive_c,
+        'avail_pct': round((avail_c / total_c * 100), 1) if total_c else 0,
+        'in_use_pct': round((in_use_c / total_c * 100), 1) if total_c else 0,
+        'maint_pct': round((maint_c / total_c * 100), 1) if total_c else 0,
+        'inactive_pct': round((inactive_c / total_c * 100), 1) if total_c else 0,
+    }
+
+    return render_template(
+        'chargers_list.html',
+        chargers=chargers,
+        stations=stations,
+        station_filter=station_filter,
+        stats=fleet_stats
+    )
 
 
 @chargers_bp.route('/add', methods=['GET', 'POST'])

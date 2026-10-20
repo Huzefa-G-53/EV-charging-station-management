@@ -30,20 +30,22 @@
         <label for="vehicle_type" class="form-label">Vehicle Type <span class="text-danger">*</span></label>
         <select class="form-select" id="vehicle_type" name="vehicle_type" required>
           <option value="">— Select —</option>
-          {% for t in ['Hatchback','Sedan','SUV','MPV','Truck','Bus','Two-Wheeler','Other'] %}
+          {% for t in ['SUV', 'Sedan', 'Hatchback', 'Van', 'Two Wheeler', 'Commercial'] %}
           <option value="{{ t }}" {% if vehicle and vehicle.vehicle_type == t %}selected{% endif %}>{{ t }}</option>
           {% endfor %}
         </select>
       </div>
       <div class="col-md-4">
         <label for="brand" class="form-label">Brand <span class="text-danger">*</span></label>
-        <input type="text" class="form-control" id="brand" name="brand"
-               value="{{ vehicle.brand if vehicle else '' }}" placeholder="e.g. Tata" required>
+        <select class="form-select" id="brand" name="brand" required>
+          <option value="">Select brand…</option>
+        </select>
       </div>
       <div class="col-md-4">
         <label for="model" class="form-label">Model <span class="text-danger">*</span></label>
-        <input type="text" class="form-control" id="model" name="model"
-               value="{{ vehicle.model if vehicle else '' }}" placeholder="e.g. Nexon EV" required>
+        <select class="form-select" id="model" name="model" required>
+          <option value="">Select model…</option>
+        </select>
       </div>
       <div class="col-md-4">
         <label for="battery_capacity" class="form-label">Battery Capacity (kWh) <span class="text-danger">*</span></label>
@@ -57,4 +59,58 @@
     </div>
   </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const EV_CATALOG = {
+    'Tata': ['Nexon EV Max', 'Nexon EV Prime', 'Tiago EV', 'Punch EV', 'Curvv EV', 'Sierra EV'],
+    'MG': ['ZS EV', 'Comet EV', 'Windsor EV'],
+    'Hyundai': ['Ioniq 5', 'Kona Electric', 'Creta EV'],
+    'Mahindra': ['XEV 9e', 'BE 6', 'e2o Plus', 'eXUV300'],
+    'BYD': ['Atto 3', 'Seal', 'e6'],
+    'Kia': ['EV6', 'EV9'],
+    'Mercedes-Benz': ['EQS', 'EQB', 'EQA'],
+    'BMW': ['iX', 'i4', 'i7', 'iX1'],
+    'Audi': ['e-tron', 'e-tron GT', 'Q8 e-tron'],
+    'Volvo': ['XC40 Recharge', 'C40 Recharge'],
+    'Tesla': ['Model 3', 'Model Y', 'Model S', 'Model X'],
+    'Ola Electric': ['S1 Pro', 'S1 Air', 'S1 X'],
+    'Ather': ['450X', '450S', 'Rizta'],
+    'TVS': ['iQube', 'iQube ST'],
+    'Bajaj': ['Chetak Electric'],
+    'Citroen': ['eC3'],
+    'Porsche': ['Taycan', 'Taycan Cross Turismo'],
+    'Jaguar': ['I-Pace']
+  };
+
+  const brandSelect = document.getElementById('brand');
+  const modelSelect = document.getElementById('model');
+  const preselectedBrand = '{{ vehicle.brand if vehicle else "" }}';
+  const preselectedModel = '{{ vehicle.model if vehicle else "" }}';
+
+  Object.keys(EV_CATALOG).sort().forEach(brand => {
+    const opt = document.createElement('option');
+    opt.value = brand;
+    opt.textContent = brand;
+    if (brand === preselectedBrand) opt.selected = true;
+    brandSelect.appendChild(opt);
+  });
+
+  function populateModels(brand) {
+    modelSelect.innerHTML = '<option value="">Select model…</option>';
+    if (brand && EV_CATALOG[brand]) {
+      EV_CATALOG[brand].forEach(model => {
+        const opt = document.createElement('option');
+        opt.value = model;
+        opt.textContent = model;
+        if (model === preselectedModel) opt.selected = true;
+        modelSelect.appendChild(opt);
+      });
+    }
+  }
+
+  brandSelect.addEventListener('change', () => populateModels(brandSelect.value));
+  if (preselectedBrand) populateModels(preselectedBrand);
+</script>
 {% endblock %}

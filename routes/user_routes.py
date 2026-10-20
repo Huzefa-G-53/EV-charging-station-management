@@ -14,7 +14,6 @@ def list_users():
     if search:
         users = execute_query(
             '''SELECT u.user_id, u.full_name, u.phone, u.email, u.account_status, u.suspension_reason, u.created_at,
-                      (SELECT COUNT(*) FROM vehicle v WHERE v.user_id = u.user_id) AS vehicle_count,
                       (SELECT COUNT(*) FROM charging_session cs WHERE cs.user_id = u.user_id) AS session_count
                FROM user u
                WHERE u.full_name LIKE %s OR u.email LIKE %s OR u.phone LIKE %s
@@ -24,7 +23,6 @@ def list_users():
     else:
         users = execute_query(
             '''SELECT u.user_id, u.full_name, u.phone, u.email, u.account_status, u.suspension_reason, u.created_at,
-                      (SELECT COUNT(*) FROM vehicle v WHERE v.user_id = u.user_id) AS vehicle_count,
                       (SELECT COUNT(*) FROM charging_session cs WHERE cs.user_id = u.user_id) AS session_count
                FROM user u
                ORDER BY u.user_id''',
@@ -71,6 +69,7 @@ def view_user(user_id):
     """
     Read-only operational profile view for Admin.
     Admin CANNOT edit customer personal details or passwords, and CANNOT delete customers.
+    Admin sees only user name and contact info — no vehicles shown.
     """
     user = execute_query(
         '''SELECT user_id, full_name, phone, email, account_status, suspension_reason, created_at, address
@@ -81,16 +80,11 @@ def view_user(user_id):
         flash('Customer not found.', 'danger')
         return redirect(url_for('users.list_users'))
 
-    vehicles = execute_query(
-        'SELECT * FROM vehicle WHERE user_id = %s ORDER BY vehicle_id',
-        (user_id,), fetch=True
-    )
     recent_sessions = execute_query(
-        '''SELECT cs.*, c.charger_type, st.station_name, v.vehicle_number
+        '''SELECT cs.*, c.charger_type, st.station_name
            FROM charging_session cs
            JOIN charger c ON cs.charger_id = c.charger_id
            JOIN charging_station st ON c.station_id = st.station_id
-           JOIN vehicle v ON cs.vehicle_id = v.vehicle_id
            WHERE cs.user_id = %s
            ORDER BY cs.session_id DESC LIMIT 5''',
         (user_id,), fetch=True
@@ -99,7 +93,6 @@ def view_user(user_id):
     return render_template(
         'users_view.html',
         user=user,
-        vehicles=vehicles,
         recent_sessions=recent_sessions
     )
 

@@ -16,40 +16,49 @@ A full-stack Flask + MySQL admin panel for managing EV charging station operatio
 
 ```
 ev-charging-management/
-├── app.py                    # Flask entry point
+├── app.py                    # Flask application entry point
 ├── config.py                 # DB credentials & secret key
-├── create_admin.py           # One-time admin account setup script
 ├── requirements.txt
-├── schema.sql                # Database schema (run first)
-├── seed.sql                  # Sample data (run after schema)
-├── sql_queries.sql           # All important SQL queries (for report)
-├── database/
-│   └── db_connection.py      # MySQL connection & execute_query helper
-├── routes/                   # One Blueprint per module
-│   ├── auth_routes.py
-│   ├── dashboard_routes.py
-│   ├── user_routes.py
-│   ├── vehicle_routes.py
-│   ├── station_routes.py
-│   ├── charger_routes.py
-│   ├── session_routes.py
-│   ├── payment_routes.py
-│   ├── staff_routes.py
-│   ├── maintenance_routes.py
-│   ├── expense_routes.py
-│   ├── revenue_routes.py
-│   ├── collaboration_routes.py
-│   └── report_routes.py
+├── database/                 # Database schemas, seeds & connection helper
+│   ├── db_connection.py      # MySQL connection pool & execute_query helper
+│   ├── schema.sql            # Complete DB schema, constraints & triggers
+│   ├── seed.py               # Unified 1-command seeding script (Admin + Data + Sessions)
+│   ├── seed.sql              # Raw SQL seed data script
+│   └── sql_queries.sql       # Complex SQL queries documentation
+├── routes/                   # Flask Blueprints (Modular architecture)
+│   ├── auth_routes.py        # Login, logout & session moderation
+│   ├── customer_routes.py    # Driver self-service portal (stations, garage, billing)
+│   ├── dashboard_routes.py   # Admin KPI analytics & timeline chart
+│   ├── user_routes.py        # Customer account management & suspension
+│   ├── station_routes.py     # Station network management
+│   ├── charger_routes.py     # Charger bay configuration
+│   ├── session_routes.py     # Charging session monitoring
+│   ├── payment_routes.py     # Invoices & payment reconciliation
+│   ├── staff_routes.py       # Staff payroll & roles
+│   ├── maintenance_routes.py # Equipment maintenance records
+│   ├── expense_routes.py     # Station operational expenditures
+│   ├── revenue_routes.py     # Charging & commercial revenues
+│   ├── collaboration_routes.py # Brand partnerships & kiosk leases
+│   └── report_routes.py      # Comprehensive management reports
 ├── templates/                # Jinja2 HTML templates
-│   ├── base.html
-│   ├── login.html
-│   ├── dashboard.html
-│   ├── *_list.html           # List page per module
-│   ├── *_form.html           # Add/Edit form per module
-│   └── reports.html
+│   ├── base.html             # Admin portal master layout (with header/footer)
+│   ├── dashboard.html        # Operations & financial dashboard
+│   ├── customer/             # Driver self-service views
+│   │   ├── base.html         # Driver portal master layout
+│   │   ├── dashboard.html    # Driver dashboard & active charging
+│   │   ├── stations.html     # Live station map & bay availability
+│   │   ├── start_session.html# Plug in & initiate charging
+│   │   ├── vehicles.html     # My EV garage
+│   │   ├── vehicle_form.html # Add/edit vehicle with brand/model dropdowns
+│   │   ├── sessions.html     # Driver charging history
+│   │   ├── payments.html     # Driver invoices & payments
+│   │   └── profile.html      # Driver profile management
+│   ├── *_list.html           # Admin data tables
+│   ├── *_form.html           # Admin create/edit forms
+│   └── reports.html          # Station P&L reports
 └── static/
-    ├── css/style.css
-    └── js/script.js
+    ├── css/style.css         # Modern design tokens, glassmorphism, responsive styles
+    └── js/script.js          # Interactive UX & confirmation helpers
 ```
 
 ---
@@ -65,39 +74,37 @@ pip install -r requirements.txt
 
 ### Step 2 — Configure Database Password (`config.py`)
 
-Open `config.py` and set `DB_PASSWORD` to your own local MySQL root password:
+Open `config.py` and set `DB_PASSWORD` to your local MySQL root password:
 
 ```python
 class Config:
     DB_HOST     = 'localhost'
     DB_USER     = 'root'
-    DB_PASSWORD = 'YOUR_MYSQL_PASSWORD'  # <-- Change this to your password!
+    DB_PASSWORD = 'YOUR_MYSQL_PASSWORD'  # <-- Enter your MySQL password
     DB_NAME     = 'ev_charging_db'
 ```
 
-### Step 3 — Create Schema & Load Seed Data
+### Step 3 — Create Schema
 
-**Option A (Using MySQL Workbench):**
-1. Open MySQL Workbench and connect to your local instance.
-2. Open and execute `schema.sql` (Click the lightning bolt ⚡ to run all).
-3. Open and execute `seed.sql`.
-
-**Option B (Using Windows PowerShell / Terminal):**
+Execute `database/schema.sql` in MySQL Workbench or via PowerShell:
 ```powershell
-Get-Content schema.sql | mysql -u root -p
-Get-Content seed.sql | mysql -u root -p
+Get-Content database/schema.sql | mysql -u root -p
 ```
-*(On Mac/Linux: `mysql -u root -p < schema.sql`)*
+*(On Mac/Linux: `mysql -u root -p < database/schema.sql`)*
 
-### Step 4 — Create Admin Account
+### Step 4 — Run Unified Seed (1 Single Command)
 
 ```bash
-python create_admin.py
+python database/seed.py
 ```
 
-This creates the default administrator login:
-- **Email**: `admin@ev.com`
-- **Password**: `admin123`
+This single command sets up the entire system automatically:
+- Creates **Administrator** account (`admin@ev.com` / `admin123`)
+- Populates **Charging Stations** (Connaught Place, BKC Hub, Indiranagar) & **12 Chargers**
+- Sets up **Drivers**, **EV Vehicles**, **Staff**, **Maintenance**, and **Collaborations**
+- Seeds **Live Active Charging Sessions** and historical sessions for the timeline graph!
+
+*(Alternatively, you can execute `database/seed.sql` directly in MySQL).*
 
 ### Step 5 — Start the Application
 
@@ -106,6 +113,7 @@ python app.py
 ```
 
 Open your browser and navigate to: **http://127.0.0.1:5000**
+
 
 ---
 

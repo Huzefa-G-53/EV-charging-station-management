@@ -1,3 +1,4 @@
+import json
 from flask import Blueprint, render_template
 from routes.auth_routes import login_required
 from database.db_connection import execute_query
@@ -31,7 +32,7 @@ def index():
            FROM charging_station cs
            LEFT JOIN revenue r ON cs.station_id = r.station_id
            GROUP BY cs.station_id, cs.station_name
-           ORDER BY total DESC''',
+           ORDER BY cs.station_name''',
         fetch=True
     )
     station_expenses = execute_query(
@@ -39,7 +40,7 @@ def index():
            FROM charging_station cs
            LEFT JOIN expenses e ON cs.station_id = e.station_id
            GROUP BY cs.station_id, cs.station_name
-           ORDER BY total DESC''',
+           ORDER BY cs.station_name''',
         fetch=True
     )
 
@@ -70,6 +71,37 @@ def index():
         fetch=True
     )
 
+    # Build P&L mappings for station comparison chart
+    exp_map = {e['station_name']: float(e['total']) for e in station_expenses}
+    rev_map = {r['station_name']: float(r['total']) for r in station_revenue}
+    station_names = [r['station_name'] for r in station_revenue]
+
+    # Clean display names for charts
+    clean_names = [
+        s.replace(' EV Station', '').replace(' Charging Hub', '').replace(' Charging Station', '')
+        for s in station_names
+    ]
+
+    chart_payload = {
+        'revenue': {
+            'labels': [r['source'] for r in revenue_by_source],
+            'values': [float(r['total']) for r in revenue_by_source]
+        },
+        'expenses': {
+            'labels': [e['expense_type'] for e in expenses_by_type],
+            'values': [float(e['total']) for e in expenses_by_type]
+        },
+        'station_pnl': {
+            'labels': clean_names,
+            'revenue': [rev_map.get(s, 0.0) for s in station_names],
+            'expenses': [exp_map.get(s, 0.0) for s in station_names]
+        },
+        'financial_split': {
+            'labels': ['Total Expenses', 'Net Profit Margin'],
+            'values': [float(total_expenses), float(max(0, net_profit))]
+        }
+    }
+
     return render_template(
         'reports.html',
         total_revenue=total_revenue,
@@ -84,4 +116,5 @@ def index():
         active_chargers=active_chargers,
         active_sessions=active_sessions,
         maintenance_summary=maintenance_summary,
+        chart_payload_json=json.dumps(chart_payload),
     )

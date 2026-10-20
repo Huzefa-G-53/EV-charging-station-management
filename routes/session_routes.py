@@ -35,7 +35,24 @@ def list_sessions():
                ORDER BY cs.session_id DESC''',
             fetch=True
         )
-    return render_template('sessions_list.html', sessions=sessions, status_filter=status_filter)
+    total_s = len(sessions)
+    active_s = sum(1 for s in sessions if s.get('status') == 'Active')
+    total_kwh = sum(float(s.get('energy_consumed') or 0) for s in sessions)
+    total_amt = sum(float(s.get('total_amount') or 0) for s in sessions)
+
+    session_stats = {
+        'total': total_s,
+        'active': active_s,
+        'total_kwh': total_kwh,
+        'total_amount': total_amt
+    }
+
+    return render_template(
+        'sessions_list.html',
+        sessions=sessions,
+        status_filter=status_filter,
+        stats=session_stats
+    )
 
 
 @sessions_bp.route('/add', methods=['GET', 'POST'])
